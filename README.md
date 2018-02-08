@@ -1,5 +1,5 @@
 # phatcech (Pronounced "Fat Check")
-Doing Cech Filtrations Wrapping around Phat (The Persistent Homology Algorithms Toolbox)
+The purpose of this code is to make it easy to run Cech Filtrations by wrapping around around Phat (The Persistent Homology Algorithms Toolbox).  Phat does most of the heavy lifting, but this code provides routines to construct and index simplices properly in a boundary matrix, as well as some plotting utilities.
 
 ## Dependencies
 * Numpy/Matplotlib
@@ -25,7 +25,7 @@ You should see the following image pop up:
 
 
 ## Running Custom Cech Filtrations
-If you have a point cloud and a set of simplices with times at which they are added, you can call the function getCechDGMS() to compute the persistence diagrams associated to the Cech filtration you've defined (see doc string for more details).  For instance, assume we want to compute the Cech filtration where 4 vertices enter at time 0 and the edges and triangles are added in the pattern below:
+If you have a point cloud and a set of simplices with times at which they are added, you can call the function getCechDGMS() to compute the persistence diagrams associated to the Cech filtration you've defined (see doc string for more details).  For instance, assume we want to compute the Cech filtration where 4 vertices enter at time 0 and the edges and triangles are added in the pattern below (note how the triangles are not added the moment all of their edges are added, unlike Rips):
 
 ![Example Cech Filtration](CechExample.svg "Example of a Cech Filtration")
 
@@ -65,3 +65,4 @@ H1:
  [[2 4]
  [3 6]]
 ```
+Note that points that never die have a birth time which is "inf".  To exclude these, set returnInfs to false.
