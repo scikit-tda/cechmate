@@ -30,6 +30,7 @@ setup(name='cechmate',
       install_requires=[
         'numpy',
         'matplotlib',
+        'phat'
       ],
       python_requires='>=2.7,!=3.1,!=3.2,!=3.3',
       classifiers=[
