@@ -2,8 +2,7 @@ import time
 
 import numpy as np
 
-from cechmate import plot_diagram, phat_diagrams, Alpha, Rips #alpha_filtration, rips_filtration
-
+from cechmate import plot_diagram, phat_diagrams, Alpha, Rips 
 
 def test_phat_diagrams():
 
@@ -34,8 +33,11 @@ def test_rips():
 def test_alpha():
 
     # Make a 3-sphere in 4 dimensions
-    X = np.random.randn(50, 4)
+    X = np.random.randn(15, 4)
     X = X / np.sqrt(np.sum(X ** 2, 1)[:, None])
     tic = time.time()
     diagrams = Alpha().build(X)
     phattime = time.time() - tic
+
+
+
