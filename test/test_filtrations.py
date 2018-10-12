@@ -2,7 +2,8 @@ import time
 
 import numpy as np
 
-from cechmate import plot_diagram, phat_diagrams, Alpha, Rips 
+from cechmate import plot_diagram, phat_diagrams, Alpha, Rips
+
 
 def test_phat_diagrams():
 
@@ -38,6 +39,3 @@ def test_alpha():
     tic = time.time()
     diagrams = Alpha().build(X)
     phattime = time.time() - tic
-
-
-

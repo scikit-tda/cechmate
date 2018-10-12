@@ -12,25 +12,28 @@ import itertools
 
 from .base import BaseFiltration
 
+
 class Verenice(BaseFiltration):
     def build(self, covers):
 
-        # Give each cover element a name. 
+        # Give each cover element a name.
         if not isinstance(covers, dict):
             covers = dict(enumerate(covers))
 
         simplices = [([k], 0.0) for k in covers.keys()]
 
         # TODO: be more intelligent about which combos we check
-        for potentials in itertools.combinations(covers.keys(), self.max_dim):
-            potential_sets = [covers[p] for p in potentials]
-            
-            d = self.jaccard(potential_sets)
 
-            # TODO: Do we want to include all of these simplices as well?
-            # if d < 1:
-            simplices.append((potentials, d))
-        
+        for k in range(2, self.max_dim + 1):
+            for potentials in itertools.combinations(covers.keys(), k):
+                potential_sets = [covers[p] for p in potentials]
+
+                d = self.jaccard(potential_sets)
+
+                # TODO: Do we want to include all of these simplices as well?
+                # if d < 1:
+                simplices.append((potentials, d))
+
         return simplices
 
     def jaccard(self, covers):
@@ -39,4 +42,3 @@ class Verenice(BaseFiltration):
         union = set.union(*covers_as_sets)
 
         return 1 - len(intersection) / len(union)
-

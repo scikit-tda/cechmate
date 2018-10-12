@@ -6,9 +6,11 @@ import phat
 
 from .filtrations.simplex import Simplex
 
+
 def phat_diagrams(simplices, returnInfs=False, verbose=True):
     """
     Do a custom filtration wrapping around phat
+
     :param simplices: A list of lists of simplices and their distances\
         the kth element is itself a list of tuples ([idx1, ..., idxk], dist)\
         where [idx1, ..., idxk] is a list of vertices involved in the simplex\
@@ -51,6 +53,7 @@ def phat_diagrams(simplices, returnInfs=False, verbose=True):
             collist = sorted(collist)
             columns.append((k - 1, collist))
         idx += 1
+
     ## Step 2: Setup boundary matrix and reduce
     if verbose:
         print(
@@ -105,4 +108,3 @@ def phat_diagrams(simplices, returnInfs=False, verbose=True):
     for i in range(len(Is)):
         Is[i] = np.array(Is[i])
     return Is
-
