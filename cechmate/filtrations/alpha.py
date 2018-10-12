@@ -9,7 +9,6 @@ from scipy import spatial
 from .base import BaseFiltration
 
 
-
 class Alpha(BaseFiltration):
     def __init__(self):
         """ No concept of max_dim supported for alpha 
@@ -84,10 +83,8 @@ class Alpha(BaseFiltration):
         simplices = [([i], 0) for i in range(X.shape[0])]
         for tau in filtration:
             simplices.append((tau, filtration[tau]))
-        
+
         return simplices
-
-
 
     def get_circumcenter(self, X):
         """
@@ -151,5 +148,3 @@ class Alpha(BaseFiltration):
                 x = x.dot(V.T) + muV
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
-
-

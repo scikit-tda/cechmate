@@ -3,6 +3,7 @@ import numpy as np
 
 from .base import BaseFiltration
 
+
 class Rips(BaseFiltration):
     def build(self, X):
         """
@@ -28,7 +29,6 @@ class Rips(BaseFiltration):
                         d = max(d, D[idxs[i], idxs[j]])
                 simplices.append((idxs, d))
         return simplices
-
 
     def getSSM(self, X):
         """
