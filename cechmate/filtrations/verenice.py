@@ -31,8 +31,8 @@ class Verenice(BaseFiltration):
                 d = self.jaccard(potential_sets)
 
                 # TODO: Do we want to include all of these simplices as well?
-                # if d < 1:
-                simplices.append((potentials, d))
+                if d < 1:
+                    simplices.append((potentials, d))
 
         return simplices
 

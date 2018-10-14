@@ -57,9 +57,6 @@ def phat_diagrams(simplices, hide_infs=True, verbose=True):
     return dgms
 
 
-
-
-
 def simplices_to_sparse_pivot_column(ordered_simplices, verbose):
     """
 
