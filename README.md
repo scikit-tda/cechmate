@@ -1,22 +1,38 @@
-# phatcech (Pronounced "Fat Check")
-The purpose of this code is to make it easy to run custom, non-Rips filtrations (e.g. Cech and Alpha) by wrapping around around Phat (The Persistent Homology Algorithms Toolbox).  Phat does most of the heavy lifting, but this code provides routines to construct and index simplices properly in a boundary matrix, as well as some plotting utilities.
+# Cechmate
+
+This library provides easy to use  onstructors for custom filtrations. It is currently designed to produce filtrations suitable for use with [Phat](https://github.com/xoltar/phat). Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. This tool helps bridge the gap between data and boundary matrices.  Currently, we support construction of Alpha and Rips filtrations, with more on the way.  
+
+If you have a particular filtration you would like implemented, please feel free to reach out and we can work on helping with implementation and integration, so others can use it.
+
+
 
 ## Dependencies
-* Numpy/Matplotlib
-* PHAT (See below)
+* Numpy
+* Matplotlib
+* Phat
 
-## Testing
-You will need to install the Python wrapper for <a href = "https://github.com/xoltar/phat/">Phat</a> using pip
+## Setup
+You will need to install the Python wrapper for [Phat](https://github.com/xoltar/phat) using pip
 
-~~~~~ bash
+```
 pip install phat
-~~~~~
+```
+
+Cechmate is currently not hosted on pypi, until it is, please install the library from a clone with the following commands:
+```
+git clone https://github.com/ctralie/cechmate
+cd cechmate
+pip install -e .
+```
+
+
+## Test examples (this doesn't work quite right right now, should we make it a notebook?)
 
 Then you can test it
 
-~~~~~ bash
+```
 python PhatCech.py
-~~~~~
+```
 
 The output is something like
 ```
@@ -26,13 +42,13 @@ Computing persistence pairs...
 Finished computing persistence pairs (Elapsed Time 1.14)
 ```
 And you should see the following image pop up:
-![Example Rips Filtration](RipsExample.png "Rips on Noisy Circle")
+![Example Rips Filtration](examples/RipsExample.png "Rips on Noisy Circle")
 
 
 ## Running Custom Filtrations
 If you have a point cloud and a set of simplices with times at which they are added, you can call the function get_phat_dgms() to compute the persistence diagrams associated to the custom filtration you've defined (see doc string for more details).  For instance, assume we want to compute a filtration where 4 vertices enter at time 0 and the edges and triangles are added in the pattern below (note how the triangles are not added the moment all of their edges are added, unlike Rips):
 
-![Example Cech Filtration](CustomExample.svg "Example of a Custom Filtration")
+![Example Cech Filtration](examples/CustomExample.svg "Example of a Custom Filtration")
 
 Then we can execute the following code:
 
@@ -103,7 +119,7 @@ Finished computing persistence pairs (Elapsed Time 0.214)
 ```
 
 And the persistence diagrams are
-![Example Alpha Filtration](AlphaExample.svg "Example of an Alpha Filtration")
+![Example Alpha Filtration](examples/AlphaExample.svg "Example of an Alpha Filtration")
 
 Note that up to H4 on 400 points would be intractible with Rips, even with <a href = "https://github.com/Ripser/ripser">ripser</a>.  But it runs in a reasonable amount of time with Alpha.  The bottleneck with Alpha is constructing the filtration and computing many circumcenters.  Note that computing the persistence pairs takes even less time than H1 for Rips with only 100 points shown above.
 
