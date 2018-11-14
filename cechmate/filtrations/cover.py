@@ -2,8 +2,6 @@
 
     Implementation of the Cover filtration from a cover.
 
-    Build the Cover Filtration in a format that can be solved with Phat.
-
     The Cover filtration is built from a cover by using the Jaccard Distance as birth times for the simplex. 
 
 
@@ -42,3 +40,6 @@ class Cover(BaseFiltration):
         union = set.union(*covers_as_sets)
 
         return 1 - len(intersection) / len(union)
+
+
+__all__ = ['Cover']

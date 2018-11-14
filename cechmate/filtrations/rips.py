@@ -41,3 +41,5 @@ class Rips(BaseFiltration):
         D[D < 0] = 0  # Numerical precision
         D = np.sqrt(D)
         return D
+
+__all__ = ['Rips']

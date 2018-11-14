@@ -148,3 +148,5 @@ class Alpha(BaseFiltration):
                 x = x.dot(V.T) + muV
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
+
+__all__ = ['Alpha']

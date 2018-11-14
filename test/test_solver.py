@@ -32,7 +32,7 @@ def test_infs():
         ([0,2], 0.7)
     ]
 
-    dgms = phat_diagrams(filt, hide_infs=False)
+    dgms = phat_diagrams(filt, show_inf=True)
     print(dgms)
     assert 0 in list(dgms.keys()) and 1 in list(dgms.keys())
     assert len(dgms.keys()) == 2

@@ -28,6 +28,7 @@ setup(name='cechmate',
       packages=['cechmate'],
       include_package_data=True,
       install_requires=[
+        'scipy',
         'numpy',
         'matplotlib',
         'phat'
