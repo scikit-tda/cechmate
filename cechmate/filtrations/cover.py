@@ -1,10 +1,10 @@
 """
 
-    Implementation of the Verenice filtration from a cover.
+    Implementation of the Cover filtration from a cover.
 
-    Build the Verenice Filtration in a format that can be solved with Phat.
+    Build the Cover Filtration in a format that can be solved with Phat.
 
-    The Verenice filtration is built from a cover by using the Jaccard Distance as birth times for the simplex. 
+    The Cover filtration is built from a cover by using the Jaccard Distance as birth times for the simplex. 
 
 
 """
@@ -13,7 +13,7 @@ import itertools
 from .base import BaseFiltration
 
 
-class Verenice(BaseFiltration):
+class Cover(BaseFiltration):
     def build(self, covers):
 
         # Give each cover element a name.
