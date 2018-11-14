@@ -149,4 +149,5 @@ class Alpha(BaseFiltration):
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
 
-__all__ = ['Alpha']
+
+__all__ = ["Alpha"]

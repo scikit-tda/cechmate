@@ -42,4 +42,5 @@ class Rips(BaseFiltration):
         D = np.sqrt(D)
         return D
 
-__all__ = ['Rips']
+
+__all__ = ["Rips"]

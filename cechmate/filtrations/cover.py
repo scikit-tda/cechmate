@@ -42,4 +42,4 @@ class Cover(BaseFiltration):
         return 1 - len(intersection) / len(union)
 
 
-__all__ = ['Cover']
+__all__ = ["Cover"]
