@@ -5,7 +5,7 @@ import numpy as np
 import phat
 
 
-def phat_diagrams(simplices, hide_infs=True, verbose=True):
+def phat_diagrams(simplices, show_inf=False, verbose=True):
     """
     Do a custom filtration wrapping around phat
 
@@ -48,7 +48,7 @@ def phat_diagrams(simplices, hide_infs=True, verbose=True):
     dgms = process_distances(pairs, ordered_simplices)
 
     ## Add all unpaired simplices as infinite points
-    if not hide_infs:
+    if show_inf:
         dgms = add_unpaired(dgms, pairs, simplices)
 
     ## Convert to arrays:
