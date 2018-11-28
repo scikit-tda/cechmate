@@ -16,7 +16,7 @@ def phat_diagrams(simplices, returnInfs=False, verbose=True):
     :param returnInfs: Whether or not to return points that never die
     :param useWrapper: If true, call the phat binary as a subprocess.  If \
         false, use Python bindings
-    :returns Is: A dictionary of persistence diagrams, where Is[k] is \
+    :returns Is: A list of persistence diagrams, where Is[k] is \
         the persistence diagram for Hk 
     """
     idxs2order = {}
@@ -102,7 +102,7 @@ def phat_diagrams(simplices, returnInfs=False, verbose=True):
                 if not p in Is:
                     Is[p] = []
                 Is[p].append([dist, np.inf])
+    IsRet = []
     for i in range(len(Is)):
-        Is[i] = np.array(Is[i])
-    return Is
-
+        IsRet.append(np.array(Is[i]))
+    return IsRet
