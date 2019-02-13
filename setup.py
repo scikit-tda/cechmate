@@ -40,7 +40,8 @@ setup(name='cechmate',
         'docs': [ # `pip install -e ".[docs]"``
           'sphinx',
           'nbsphinx',
-          'sphinx_rtd_theme',
+          'sphinx-better-theme',
+          'sphinxcontrib-fulltoc'
         ]
       },
       python_requires='>=2.7,!=3.1,!=3.2,!=3.3',
