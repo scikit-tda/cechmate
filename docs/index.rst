@@ -33,8 +33,7 @@ Documentation
 .. toctree::
     :maxdepth: 1
 
-    Persistence Images
-    distances
+    notebooks/BasicUsage
     reference
 
 
@@ -42,8 +41,7 @@ Documentation
     :maxdepth: 1
     :caption: Tutorials
 
-    Classification with persistence images
-
+    
 
 Indices and tables
 ==================
