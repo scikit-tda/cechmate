@@ -5,7 +5,7 @@ import numpy as np
 import phat
 
 
-def phat_diagrams(simplices, show_inf=False, verbose=True):
+def phat_diagrams(simplices, show_infs=False, verbose=True):
     """
     Do a custom filtration wrapping around phat
 
@@ -15,12 +15,14 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
         the kth element is itself a list of tuples ([idx1, ..., idxk], dist)
         where [idx1, ..., idxk] is a list of vertices involved in the simplex
         and "dist" is the distance at which the simplex is added
-    hide_infs: Whether or not to return points that never die
+
+    show_infs: Boolean
+        Whether or not to return points that never die
 
     Returns
     --------
     dgms: A dictionary of persistence diagrams, where dgms[k] is 
-        the persistence diagram for Hk 
+          the persistence diagram for Hk 
     """
 
     ## Convert simplices representation to sparse pivot column
