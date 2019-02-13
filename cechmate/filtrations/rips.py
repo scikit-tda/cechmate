@@ -28,6 +28,9 @@ class Rips(BaseFiltration):
                     for j in range(i + 1, len(idxs)):
                         d = max(d, D[idxs[i], idxs[j]])
                 simplices.append((idxs, d))
+        
+        self.simplices_ = simplices
+
         return simplices
 
     def getSSM(self, X):

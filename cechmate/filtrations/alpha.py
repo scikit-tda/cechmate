@@ -81,8 +81,9 @@ class Alpha(BaseFiltration):
             )
 
         simplices = [([i], 0) for i in range(X.shape[0])]
-        for tau in filtration:
-            simplices.append((tau, filtration[tau]))
+        simplices.extend(filtration.items())
+
+        self.simplices_ = simplices
 
         return simplices
 

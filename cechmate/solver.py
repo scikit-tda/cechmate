@@ -26,7 +26,8 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
     """
 
     ## Convert simplices representation to sparse pivot column
-    ordered_simplices = sorted(simplices, key=lambda x: x[1])
+    #  -- sort by birth time, if tie, use order of simplex
+    ordered_simplices = sorted(simplices, key=lambda x: (x[1], len(x[0])))
     columns = simplices_to_sparse_pivot_column(ordered_simplices, verbose)
 
     ## Setup boundary matrix and reduce
@@ -54,7 +55,7 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
         dgms = add_unpaired(dgms, pairs, simplices)
 
     ## Convert to arrays:
-    dgms = {i: np.array(dgm) for i, dgm in dgms.items()}
+    dgms = [np.array(dgm) for dgm in dgms.values()]
 
     return dgms
 

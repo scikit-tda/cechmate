@@ -29,6 +29,8 @@ class Cech(BaseFiltration):
                 C, r2 = miniball(frozenset(idxs), frozenset([]))
                 simplices.append((list(idxs), np.sqrt(r2)))
 
+        self.simplices_ = simplices
+
         return simplices
 
 
