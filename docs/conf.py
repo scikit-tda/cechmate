@@ -56,6 +56,7 @@ extensions = [
     'nbsphinx',
     "sphinx.ext.napoleon",
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinxcontrib.fulltoc'
 ]
 
 autodoc_default_options = {
@@ -73,6 +74,7 @@ autodoc_default_flags = [
     "inherited-members"
 ]
 
+html_logo = "logo.png"
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -106,20 +108,64 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
-html_logo = 'logo.png'
+from better import better_theme_path
+html_theme_path = [better_theme_path]
+html_theme = 'better'
+html_sidebars = {
+    '**': ['localtoc.html', 'sourcelink.html', 'searchbox.html'],
+}
 
+html_theme_options = {
+  # show sidebar on the right instead of on the left
+  'rightsidebar': False,
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
+  # inline CSS to insert into the page if you're too lazy to make a
+  # separate file
+  'inlinecss': '.logo { width:100%; }',
+
+  # CSS files to include after all other CSS files
+  # (refer to by relative path from conf.py directory, or link to a
+  # remote file)
+#   'cssfiles': ['_static/my_style.css'],  # default is empty list
+
+  # show a big text header with the value of html_title
+  'showheader': False,
+
+  # show the breadcrumbs and index|next|previous links at the top of
+  # the page
+  'showrelbartop': True,
+  # same for bottom of the page
+  'showrelbarbottom': True,
+
+  # show the self-serving link in the footer
+  'linktotheme': True,
+
+  # width of the sidebar. page width is determined by a CSS rule.
+  # I prefer to define things in rem because it scales with the
+  # global font size rather than pixels or the local font size.
+  'sidebarwidth': '15rem',
+
+  # color of all body text
+  'textcolor': '#000000',
+
+  # color of all headings (<h1> tags); defaults to the value of
+  # textcolor, which is why it's defined here at all.
+  'headtextcolor': '',
+
+  # color of text in the footer, including links; defaults to the
+  # value of textcolor
+  'footertextcolor': '',
+
+  # Google Analytics info
+  'ga_ua': '',
+  'ga_domain': '',
+}
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

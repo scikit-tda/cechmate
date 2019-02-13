@@ -1,6 +1,6 @@
 
 Cechmate
-==================================
+-----------
 
 |PyPI version| |Build Status| |Codecov| |License: MIT|
 
@@ -10,7 +10,7 @@ Currently, we support construction of Alpha and Rips filtrations, with more on t
 If you have a particular filtration you would like implemented, please feel free to reach out and we can work on helping with implementation and integration, so others can use it.
 
 Setup
---------
+=======
 
 The latest version of cechmate can be found on Pypi and installed with pip:
 
@@ -20,7 +20,7 @@ The latest version of cechmate can be found on Pypi and installed with pip:
 
 
 Contributions
---------------
+===============
 
 We welcome contributions of all shapes and sizes. There are lots of opportunities for potential projects, so please get in touch if you would like to help out. Everything from an implementation of your favorite distance, notebooks, examples, and documentation are all equally valuable so please don't feel you can't contribute. 
 
@@ -28,11 +28,13 @@ To contribute please fork the project make your changes and submit a pull reques
 
 
 Documentation
---------------
+===============
+
 
 .. toctree::
     :maxdepth: 1
 
+    self
     notebooks/BasicUsage
     reference
 
