@@ -10,8 +10,9 @@ from ..solver import phat_diagrams
 
 
 class BaseFiltration:
-    def __init__(self, max_dim=3):
+    def __init__(self, max_dim=3, verbose=True):
         self.max_dim = max_dim
+        self.verbose = verbose
 
         self.simplices_ = None
         self.diagrams_ = None

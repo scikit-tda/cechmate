@@ -15,7 +15,7 @@ class Alpha(BaseFiltration):
         """
         pass
 
-    def build(self, X, verbose=True):
+    def build(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
         :param X: An Nxd array of N Euclidean vectors in d dimensions
@@ -29,12 +29,13 @@ class Alpha(BaseFiltration):
         maxdim = X.shape[1] - 1
 
         ## Step 1: Figure out the filtration
-        if verbose:
+        if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
         delaunay_faces = spatial.Delaunay(X).simplices
-        if verbose:
+        
+        if self.verbose:
             print(
                 "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
                 % (time.time() - tic)
@@ -74,7 +75,8 @@ class Alpha(BaseFiltration):
                     tau = sigma[0:i] + sigma[i + 1 : :]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
-        if verbose:
+        
+        if self.verbose:
             print(
                 "Finished building alpha filtration (Elapsed Time %.3g)"
                 % (time.time() - tic)
@@ -90,6 +92,7 @@ class Alpha(BaseFiltration):
     def get_circumcenter(self, X):
         """
         Compute the circumcenter and circumradius of a simplex
+        
         Parameters
         ----------
         X : ndarray (N, d)
