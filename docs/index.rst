@@ -36,7 +36,7 @@ Documentation
 
     self
     notebooks/BasicUsage
-    reference
+    reference/index
 
 
 .. toctree::
