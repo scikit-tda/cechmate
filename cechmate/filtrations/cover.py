@@ -7,20 +7,11 @@
 
 """
 import itertools
+import scipy
+import scipy.special
 
 from .base import BaseFiltration
 
-"""
-    TODO: Build the Cech filtration that can be built using any metric.
-    
-    Can the Jaccard Filtration be built from this?
-
-"""
-
-class Cech(BaseFiltration):
-
-    def metric(self, elems):
-        pass
 
 class Cover(BaseFiltration):
     def jaccard(self, covers):
@@ -33,7 +24,6 @@ class Cover(BaseFiltration):
         return 1 - len(intersection) / len(union)
     
     def build(self, covers):
-
         # Give each cover element a name.
         if not isinstance(covers, dict):
             covers = dict(enumerate(covers))
@@ -41,9 +31,12 @@ class Cover(BaseFiltration):
         simplices = [([k], 0.0) for k in covers.keys()]
 
         # TODO: be more intelligent about which combos we check
-
         for k in range(2, self.max_dim + 2):
-            for potentials in itertools.combinations(covers.keys(), k):
+            expectedN = scipy.special.comb(len(covers.keys()), k)
+            for i, potentials in enumerate(itertools.combinations(covers.keys(), k)):
+                if not i % 500:
+                    print(f" -- run {i} / {expectedN}\r", end="")
+                
                 potential_sets = [covers[p] for p in potentials]
 
                 d = self.jaccard(potential_sets)
