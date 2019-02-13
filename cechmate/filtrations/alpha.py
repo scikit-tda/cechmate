@@ -9,17 +9,23 @@ from scipy import spatial
 from .base import BaseFiltration
 
 
-
 class Alpha(BaseFiltration):
+    """ Construct an Alpha filtration from the given data.
+
+    """
     def __init__(self):
-        """ No concept of max_dim supported for alpha 
+        """This __init__ is defined for alpha 
         """
         pass
 
-    def build(self, X, verbose=True):
+    def build(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
-        :param X: An Nxd array of N Euclidean vectors in d dimensions
+        
+        Parameters
+        ===========
+        X: Nxd array
+            Array of N Euclidean vectors in d dimensions
         """
 
         if X.shape[0] < X.shape[1]:
@@ -30,12 +36,13 @@ class Alpha(BaseFiltration):
         maxdim = X.shape[1] - 1
 
         ## Step 1: Figure out the filtration
-        if verbose:
+        if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
         delaunay_faces = spatial.Delaunay(X).simplices
-        if verbose:
+        
+        if self.verbose:
             print(
                 "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
                 % (time.time() - tic)
@@ -53,7 +60,7 @@ class Alpha(BaseFiltration):
                     sigma = tuple(sorted(sigma))
                     simplices_bydim[dim].append(sigma)
                     if not sigma in filtration:
-                        filtration[sigma] = self.get_circumcenter(X[sigma, :])[1]
+                        filtration[sigma] = self._get_circumcenter(X[sigma, :])[1]
                     for i in range(dim):
                         # Propagate alpha filtration value
                         tau = sigma[0:i] + sigma[i + 1 : :]
@@ -61,7 +68,7 @@ class Alpha(BaseFiltration):
                             filtration[tau] = min(filtration[tau], filtration[sigma])
                         elif len(tau) > 1:
                             # If Tau is not empty
-                            xtau, rtauSqr = self.get_circumcenter(X[tau, :])
+                            xtau, rtauSqr = self._get_circumcenter(X[tau, :])
                             if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
                                 filtration[tau] = filtration[sigma]
         for f in filtration:
@@ -75,23 +82,24 @@ class Alpha(BaseFiltration):
                     tau = sigma[0:i] + sigma[i + 1 : :]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
-        if verbose:
+        
+        if self.verbose:
             print(
                 "Finished building alpha filtration (Elapsed Time %.3g)"
                 % (time.time() - tic)
             )
 
         simplices = [([i], 0) for i in range(X.shape[0])]
-        for tau in filtration:
-            simplices.append((tau, filtration[tau]))
-        
+        simplices.extend(filtration.items())
+
+        self.simplices_ = simplices
+
         return simplices
 
-
-
-    def get_circumcenter(self, X):
+    def _get_circumcenter(self, X):
         """
         Compute the circumcenter and circumradius of a simplex
+        
         Parameters
         ----------
         X : ndarray (N, d)
@@ -153,3 +161,4 @@ class Alpha(BaseFiltration):
         return (np.inf, np.inf)  # SC2 (Points not in general position)
 
 
+__all__ = ["Alpha"]

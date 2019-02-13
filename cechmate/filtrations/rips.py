@@ -3,16 +3,37 @@ import numpy as np
 
 from .base import BaseFiltration
 
+
 class Rips(BaseFiltration):
+    """ Construct a Rips filtration and the associated diagrams. abcabc
+
+    Examples
+    ========
+
+        >>> r = Rips(max_dim=3)
+        >>> simplices = r.fit(X)
+        >>> diagrams = r.transform(simplices)
+
+    """
+
+
     def build(self, X):
         """
         Do the rips filtration of a Euclidean point set
 
-        :param X: An Nxd array of N Euclidean vectors in d dimensions
+        Parameters
+        ===========
+        X:
+            An Nxd array of N Euclidean vectors in d dimensions
+        Y: 
+            Another one
 
-        :returns simplices: Rips filtration for the data X
+        Returns
+        ========
+        simplices:
+            Rips filtration for the data X
         """
-        D = self.getSSM(X)
+        D = self._getSSM(X)
         N = D.shape[0]
         xr = np.arange(N)
         xrl = xr.tolist()
@@ -27,10 +48,12 @@ class Rips(BaseFiltration):
                     for j in range(i + 1, len(idxs)):
                         d = max(d, D[idxs[i], idxs[j]])
                 simplices.append((idxs, d))
+        
+        self.simplices_ = simplices
+
         return simplices
 
-
-    def getSSM(self, X):
+    def _getSSM(self, X):
         """
         Given a set of Euclidean vectors, return a pairwise distance matrix
         :param X: An Nxd array of N Euclidean vectors in d dimensions
@@ -41,3 +64,6 @@ class Rips(BaseFiltration):
         D[D < 0] = 0  # Numerical precision
         D = np.sqrt(D)
         return D
+
+
+__all__ = ["Rips"]

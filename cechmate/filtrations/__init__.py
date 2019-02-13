@@ -1,2 +1,4 @@
-from .alpha import Alpha
-from .rips import Rips
+from .alpha import *
+from .rips import *
+from .cech import *
+from .miniball import get_boundary

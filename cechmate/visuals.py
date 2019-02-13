@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_dgms(
+def plot_diagrams(
     diagrams,
     plot_only=None,
     title=None,
@@ -172,4 +172,4 @@ def plot_dgms(
 
 
 
-__all__ = ["plot_dgms"]
+__all__ = ["plot_diagrams"]
