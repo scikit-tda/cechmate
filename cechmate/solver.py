@@ -5,7 +5,7 @@ import numpy as np
 import phat
 
 
-def phat_diagrams(simplices, show_infs=False, verbose=True):
+def phat_diagrams(simplices, show_inf=False, verbose=True):
     """
     Do a custom filtration wrapping around phat
 
@@ -16,7 +16,7 @@ def phat_diagrams(simplices, show_infs=False, verbose=True):
         where [idx1, ..., idxk] is a list of vertices involved in the simplex
         and "dist" is the distance at which the simplex is added
 
-    show_infs: Boolean
+    show_inf: Boolean
         Whether or not to return points that never die
 
     Returns
