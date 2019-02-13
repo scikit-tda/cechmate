@@ -2,3 +2,4 @@ venv
 .pytest_cache
 __pycache__
 cechmate.egg-info
+.ipynb_checkpoints
