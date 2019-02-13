@@ -1,7 +1,3 @@
-
-Cechmate
------------
-
 |PyPI version| |Build Status| |Codecov| |License: MIT|
 
 This library provides easy to use constructors for custom filtrations. It is currently designed to produce filtrations suitable for use with Phat. Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. This tool helps bridge the gap between data and boundary matrices.
@@ -34,7 +30,6 @@ Documentation
 .. toctree::
     :maxdepth: 1
 
-    self
     notebooks/BasicUsage
     reference/index
 

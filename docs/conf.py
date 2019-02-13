@@ -98,6 +98,10 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+
+templates_path = ['_templates']
+
+
 from better import better_theme_path
 html_theme_path = [better_theme_path]
 html_theme = 'better'
@@ -108,28 +112,34 @@ html_sidebars = {
         'searchbox.html'
     ],
 }
-
+html_static_path = ['_static']
+html_short_title = project
 html_theme_options = {
+#   'cssfiles': 'custom_style.css',
+ 
+  
   # show sidebar on the right instead of on the left
   'rightsidebar': False,
 
   # inline CSS to insert into the page if you're too lazy to make a
   # separate file
-  'inlinecss': '.logo { width:100%; }',
+#   'inlinecss': '',
 
   # CSS files to include after all other CSS files
   # (refer to by relative path from conf.py directory, or link to a
   # remote file)
-#   'cssfiles': ['_static/my_style.css'],  # default is empty list
+  'cssfiles': ['_static/custom_style.css'],  # default is empty list
 
   # show a big text header with the value of html_title
-  'showheader': False,
+  'showheader': True,
 
   # show the breadcrumbs and index|next|previous links at the top of
   # the page
   'showrelbartop': True,
   # same for bottom of the page
   'showrelbarbottom': True,
+
+
 
   # show the self-serving link in the footer
   'linktotheme': True,
