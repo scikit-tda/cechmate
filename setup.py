@@ -18,12 +18,12 @@ with open('README.md') as f:
 
 setup(name='cechmate',
       version=verstr,
-      description='Custom filtration builders.',
+      description='Custom filtration constructors for Python',
       long_description=long_description,
       long_description_content_type="text/markdown",	
       author='Christopher Tralie, Nathaniel Saul',
       author_email='chris.tralie@gmail.com, nat@saulgill.com',
-      url='https://github.com/scikit-tda/cechmate',
+      url='https://cechmate.scikit-tda.org',
       license='MIT',
       packages=['cechmate'],
       include_package_data=True,
@@ -35,7 +35,8 @@ setup(name='cechmate',
       ],
       extras_require={ # use `pip install -e ".[testing]"``
         'testing': [
-          'pytest' 
+          'pytest',
+          'pytest-cov'
         ],
         'docs': [ # `pip install -e ".[docs]"``
           'sphinx',

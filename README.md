@@ -1,32 +1,34 @@
-# Cechmate
-
-This library provides easy to use  onstructors for custom filtrations. 
-It is currently designed to produce filtrations suitable for use with [Phat](https://github.com/xoltar/phat). 
+This library provides easy to use constructors for custom filtrations that are suitable for use with [Phat](https://github.com/xoltar/phat). 
 Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. 
 This tool helps bridge the gap between data and boundary matrices.  
-Currently, we support construction of Alpha and Rips filtrations, with more on the way.  
+Currently, we support construction of Alpha, Rips, and Cech filtrations, and provide an easy interface for Phat.
 
 If you have a particular filtration you would like implemented, please feel free to reach out and we can work on helping with implementation and integration, so others can use it.
 
-## Dependencies
+# Setup
+
+We use the following dependencies in this library
+
 * Numpy
+* Scipy
 * Matplotlib
 * Phat
 
-## Setup
-You will need to install the Python wrapper for [Phat](https://github.com/xoltar/phat) using pip
+
+The latest version of Cechmate can be found on Pypi and installed with pip:
 
 ```
-pip install phat
+pip install cechmate
 ```
 
-Cechmate is currently not hosted on pypi, until it is, please install the library from a clone with the following commands:
-```
-git clone https://github.com/ctralie/cechmate
-cd cechmate
-pip install -e .
-```
+# Contributions
 
-## Test examples
 
-Please refer to the BasicUsage notebook in the examples/ directory
+We welcome contributions of all shapes and sizes. There are lots of opportunities for potential projects, so please get in touch if you would like to help out. Everything from an implementation of your favorite distance, notebooks, examples, and documentation are all equally valuable so please don't feel you can't contribute. 
+
+To contribute please fork the project make your changes and submit a pull request. We will do our best to work through any issues with you and get your code merged into the main branch.
+
+
+## Documentation
+
+Check out complete documentation at [cechmate.scikit-tda.org](http://www.cechmate.scikit-tda.org/)

@@ -1,9 +1,13 @@
 |PyPI version| |Build Status| |Codecov| |License: MIT|
 
-This library provides easy to use constructors for custom filtrations. It is currently designed to produce filtrations suitable for use with Phat. Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. This tool helps bridge the gap between data and boundary matrices.
-Currently, we support construction of Alpha and Rips filtrations, with more on the way.
+
+This library provides easy to use constructors for custom filtrations that are suitable for use with `Phat <https://github.com/xoltar/phat>`_. 
+Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. 
+This tool helps bridge the gap between data and boundary matrices.  
+Currently, we support construction of Alpha, Rips, and Cech filtrations, and provide an easy interface for Phat.
 
 If you have a particular filtration you would like implemented, please feel free to reach out and we can work on helping with implementation and integration, so others can use it.
+
 
 Setup
 =======
@@ -49,12 +53,12 @@ Indices and tables
 
 
 
-.. |PyPI version| image:: https://badge.fury.io/py/persim.svg
-   :target: https://badge.fury.io/py/persim
-.. |Build Status| image:: https://travis-ci.org/scikit-tda/persim.svg?branch=master
-   :target: https://travis-ci.org/scikit-tda/persim
-.. |Codecov| image:: https://codecov.io/gh/scikit-tda/persim/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/scikit-tda/persim
+.. |PyPI version| image:: https://badge.fury.io/py/cechmate.svg
+   :target: https://badge.fury.io/py/cechmate
+.. |Build Status| image:: https://travis-ci.org/scikit-tda/cechmate.svg?branch=master
+   :target: https://travis-ci.org/scikit-tda/cechmate
+.. |Codecov| image:: https://codecov.io/gh/scikit-tda/cechmate/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/scikit-tda/cechmate
 .. |License: MIT| image:: https://img.shields.io/badge/License-MIT-yellow.svg
    :target: https://opensource.org/licenses/MIT)
 
