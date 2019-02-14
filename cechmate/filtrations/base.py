@@ -14,7 +14,7 @@ class BaseFiltration:
     """
  
     def __init__(self, max_dim=3, verbose=True):
-        """ Default constructor
+        """Default constructor
         
         Parameters
         ----------

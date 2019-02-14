@@ -35,8 +35,8 @@ setup(name='cechmate',
       ],
       extras_require={ # use `pip install -e ".[testing]"`
         'testing': [
-          'pytest',
-          'pytest-cov'
+          'pytest-cov',
+          'pytest'
         ],
         'docs': [ # `pip install -e ".[docs]"`
           'sphinx',
