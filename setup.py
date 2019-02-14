@@ -33,12 +33,12 @@ setup(name='cechmate',
         'matplotlib',
         'phat'
       ],
-      extras_require={ # use `pip install -e ".[testing]"``
+      extras_require={ # use `pip install -e ".[testing]"`
         'testing': [
           'pytest',
           'pytest-cov'
         ],
-        'docs': [ # `pip install -e ".[docs]"``
+        'docs': [ # `pip install -e ".[docs]"`
           'sphinx',
           'nbsphinx',
           'sphinx-better-theme',

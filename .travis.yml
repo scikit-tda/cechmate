@@ -12,7 +12,7 @@ matrix:
       sudo: true
 
 install:
-  - pip install ".[testing]"
+  - pip install -e ".[testing]"
 
 script:
   - pytest --cov cechmate

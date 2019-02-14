@@ -31,7 +31,7 @@ class Alpha(BaseFiltration):
             If True, then print logging statements.
 
         """
-        pass
+        super().__init__(verbose=verbose)
 
     def build(self, X):
         """
