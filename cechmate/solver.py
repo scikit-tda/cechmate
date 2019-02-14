@@ -7,7 +7,7 @@ import phat
 
 def phat_diagrams(simplices, show_inf=False, verbose=True):
     """
-    Do a custom filtration wrapping around phat
+    Compute the persistence diagram for :code:`simplices` using Phat.
 
     Parameters
     -----------
@@ -21,8 +21,8 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
 
     Returns
     --------
-    dgms: A dictionary of persistence diagrams, where dgms[k] is 
-          the persistence diagram for Hk 
+    dgms: list of diagrams 
+        the persistence diagram for Hk 
     """
 
     ## Convert simplices representation to sparse pivot column

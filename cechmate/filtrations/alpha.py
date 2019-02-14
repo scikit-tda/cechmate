@@ -12,10 +12,17 @@ from .base import BaseFiltration
 class Alpha(BaseFiltration):
     """ Construct an Alpha filtration from the given data.
 
+    Examples
+    ========
+
+        >>> r = Alpha()
+        >>> simplices = r.build(X)
+        >>> diagrams = r.diagrams(simplices)
+
     """
+
     def __init__(self):
-        """This __init__ is defined for alpha 
-        """
+        """"""
         pass
 
     def build(self, X):

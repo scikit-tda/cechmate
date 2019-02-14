@@ -5,33 +5,30 @@ from .base import BaseFiltration
 
 
 class Rips(BaseFiltration):
-    """ Construct a Rips filtration and the associated diagrams. abcabc
+    """Construct a Rips filtration and the associated diagrams.
 
     Examples
     ========
 
         >>> r = Rips(max_dim=3)
-        >>> simplices = r.fit(X)
-        >>> diagrams = r.transform(simplices)
+        >>> simplices = r.build(X)
+        >>> diagrams = r.diagrams(simplices)
 
     """
 
 
     def build(self, X):
-        """
-        Do the rips filtration of a Euclidean point set
+        """Compute the rips filtration of a Euclidean point set.
 
         Parameters
         ===========
-        X:
-            An Nxd array of N Euclidean vectors in d dimensions
-        Y: 
-            Another one
+        X: An Nxd array
+            An Nxd array of N Euclidean vectors in d dimensions.
 
         Returns
         ========
-        simplices:
-            Rips filtration for the data X
+        simplices: list of tuples
+            List of simplices with birth time representing Rips filtration for the data X.
         """
         D = self._getSSM(X)
         N = D.shape[0]
