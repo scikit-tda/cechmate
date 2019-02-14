@@ -21,8 +21,16 @@ class Alpha(BaseFiltration):
 
     """
 
-    def __init__(self):
-        """"""
+    def __init__(self, verbose=None):
+        """Default constructor
+
+        Parameters
+        ----------
+
+        verbose: boolean
+            If True, then print logging statements.
+
+        """
         pass
 
     def build(self, X):
