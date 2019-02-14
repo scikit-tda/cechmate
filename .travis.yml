@@ -12,6 +12,7 @@ matrix:
       sudo: true
 
 install:
+  
   - pip install -e ".[testing]"
 
 script:
