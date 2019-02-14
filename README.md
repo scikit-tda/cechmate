@@ -1,3 +1,8 @@
+[![PyPI version](https://badge.fury.io/py/cechmate.svg)](https://badge.fury.io/py/cechmate)
+[![Build Status](https://travis-ci.org/scikit-tda/cechmate.svg?branch=master)](https://travis-ci.org/scikit-tda/cechmate)
+[![codecov](https://codecov.io/gh/scikit-tda/cechmate/branch/master/graph/badge.svg)](https://codecov.io/gh/scikit-tda/cechmate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This library provides easy to use constructors for custom filtrations that are suitable for use with [Phat](https://github.com/xoltar/phat). 
 Phat currently provides a clean interface for persistence reduction algorithms for boundary matrices. 
 This tool helps bridge the gap between data and boundary matrices.  
