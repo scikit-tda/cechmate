@@ -1,3 +1,5 @@
+import numpy as np
+
 def rips__filtration_gudhi(D, p, coeff=2, doPlot=False):
     """
     Do the rips filtration, wrapping around the GUDHI library (for comparison)

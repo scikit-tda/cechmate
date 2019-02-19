@@ -31,7 +31,8 @@ setup(name='cechmate',
         'scipy',
         'numpy',
         'matplotlib',
-        'phat'
+        'phat',
+        'persim'
       ],
       extras_require={ # use `pip install -e ".[testing]"`
         'testing': [

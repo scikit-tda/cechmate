@@ -17,7 +17,7 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
         and "dist" is the distance at which the simplex is added
 
     show_inf: Boolean
-        Whether or not to return points that never die
+        Determines whether or not to return points that never die.
 
     Returns
     --------

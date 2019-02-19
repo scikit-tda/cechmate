@@ -3,6 +3,7 @@ import numpy as np
 
 from .base import BaseFiltration
 
+__all__ = ["Rips"]
 
 class Rips(BaseFiltration):
     """Construct a Rips filtration and the associated diagrams.
@@ -15,7 +16,6 @@ class Rips(BaseFiltration):
         >>> diagrams = r.diagrams(simplices)
 
     """
-
 
     def build(self, X):
         """Compute the rips filtration of a Euclidean point set.
@@ -61,6 +61,3 @@ class Rips(BaseFiltration):
         D[D < 0] = 0  # Numerical precision
         D = np.sqrt(D)
         return D
-
-
-__all__ = ["Rips"]

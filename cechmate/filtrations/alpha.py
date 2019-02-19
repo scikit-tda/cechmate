@@ -3,14 +3,19 @@ import time
 
 import numpy as np
 import numpy.linalg as linalg
-
 from scipy import spatial
 
 from .base import BaseFiltration
 
+__all__ = ["Alpha"]
 
 class Alpha(BaseFiltration):
     """ Construct an Alpha filtration from the given data.
+
+    Note
+    =====
+
+    Alpha filtrations use radius instead of diameter. Multiply results or X by 2 when comparing the filtration to Rips or Cech.
 
     Examples
     ========
@@ -174,6 +179,3 @@ class Alpha(BaseFiltration):
                 x = x.dot(V.T) + muV
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
-
-
-__all__ = ["Alpha"]

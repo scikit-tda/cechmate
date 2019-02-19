@@ -4,6 +4,9 @@ import numpy as np
 from .base import BaseFiltration
 from .miniball import miniball_cache
 
+
+__all__ = ["Cech"]
+
 class Cech(BaseFiltration):
     """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
 
@@ -50,8 +53,3 @@ class Cech(BaseFiltration):
         self.simplices_ = simplices
 
         return simplices
-
-
-
-
-
