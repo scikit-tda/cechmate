@@ -60,7 +60,7 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
     return dgms
 
 
-def _simplices_to_sparse_pivot_column(ordered_simplices, verbose):
+def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
     """
 
     """
@@ -122,7 +122,7 @@ def _process_distances(pairs, ordered_simplices):
         posneg[bi], posneg[di] = 1, -1
 
         assert dd >= bd
-        assert len(bidxs) == len(didxs) - 1
+        # assert len(bidxs) == len(didxs) - 1
 
         p = len(bidxs) - 1
 
