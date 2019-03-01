@@ -1,4 +1,4 @@
-|PyPI version| |Build Status| |Codecov| |License: MIT|
+|PyPI version| |Downloads| |Build Status| |Codecov| |License: MIT|
 
 
 This library provides easy to use constructors for custom filtrations that are suitable for use with `Phat <https://github.com/xoltar/phat>`_. 
@@ -52,7 +52,8 @@ Indices and tables
 * :ref:`search`
 
 
-
+.. |Downloads| image:: https://pypip.in/download/cechmate/badge.svg
+    :target: https://pypi.python.org/pypi/cechmate/
 .. |PyPI version| image:: https://badge.fury.io/py/cechmate.svg
    :target: https://badge.fury.io/py/cechmate
 .. |Build Status| image:: https://travis-ci.org/scikit-tda/cechmate.svg?branch=master
