@@ -1,6 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/cechmate.svg)](https://badge.fury.io/py/cechmate)
 [![Downloads](https://pypip.in/download/cechmate/badge.svg)](https://pypi.python.org/pypi/cechmate/)
-
 [![Build Status](https://travis-ci.org/scikit-tda/cechmate.svg?branch=master)](https://travis-ci.org/scikit-tda/cechmate)
 [![codecov](https://codecov.io/gh/scikit-tda/cechmate/branch/master/graph/badge.svg)](https://codecov.io/gh/scikit-tda/cechmate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
