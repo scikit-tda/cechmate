@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from cechmate import extended
+from cechmate import Extended
+from cechmate.filtrations.extended import _lower_star
 
 @pytest.fixture
 def reeb():
@@ -29,10 +30,8 @@ def reeb():
         0: {
             "ordinary": [[0.5, 1.5]],
             "extended": [[0.0, 3.5]],
-            "relative": [[]]
         },
         1: {
-            "ordinary": [[]],
             "extended": [[2.5, 1.0]],
             "relative": [[3.0, 2.0]]
         }
@@ -70,29 +69,21 @@ def triangle():
 
     return X, f
 
-
 def test_reeb_known(reeb):
     X, f, expected = reeb
 
-    bm, mapping = extended.up_down_boundary_matrix(X, f)
-    red_bm = extended.reduce_boundary_matrix(bm)
-
-    ordinary, ext, relative = extended.separate_boundary_matrix(red_bm)
-
-    import pdb; pdb.set_trace()
-    assert expected == ext
-
-
+    diagrams = Extended().diagrams(X, f)
+    assert expected == diagrams
 
 def test_lower_star(triangle):
     X, f = triangle
-    lstar = extended.lower_star(X, 0, f)
+    lstar = _lower_star(X, 0, f)
 
     assert len(lstar) == 4
     assert [0,1,2] in lstar
 
     f = {0:4, 1:1, 2:1}
-    lstar = extended.lower_star(X, 1, f)
+    lstar = _lower_star(X, 1, f)
 
     assert len(lstar) == 2
     assert [0,1,2] not in lstar
@@ -100,42 +91,31 @@ def test_lower_star(triangle):
 def test_lower_boundary_matrix(triangle):
     X, f = triangle
 
-    bm, _ = extended.up_down_boundary_matrix(X, f)
-    assert bm == [
+    bm, _ = Extended()._up_down_boundary_matrix(X, f)
+    assert bm == [ # this was manually computed by @sauln
         (0, []), 
         (0, []), 
         (1, [0, 1]), 
         (0, []), 
         (1, [1, 3]), 
         (1, [0, 3]), 
+        (2, [2,4,5]),
         (1, [3]), 
         (1, [1]), 
-        (2, [4, 6, 7]), 
+        (2, [4, 7, 8]), 
         (1, [0]), 
-        (2, [2, 7, 9]), 
-        (2, [5, 6, 9])
+        (2, [2, 8, 10]), 
+        (2, [5, 7, 10]),
+        (3, [6, 9, 11, 12])
     ]
 
 def test_reduction(triangle):
     X, f = triangle
-    bm, _ = extended.up_down_boundary_matrix(X, f)
+    bm, _ = Extended()._up_down_boundary_matrix(X, f)
 
-    red_bm = extended.reduce_boundary_matrix(bm)
-    assert red_bm == [
-        (0, []),
-        (0, []),
-        (1, [0, 1]),
-        (0, []),
-        (1, [1, 3]),
-        (1, []),
-        (2, [2, 4, 5]),
-        (1, [0]),
-        (1, []),
-        (2, [4, 7, 8]),
-        (1, []),
-        (2, [2, 8, 10]),
-        (2, []),
-        (3, [6, 9, 11, 12])
+    pairs = Extended()._compute_persistence_pairs(bm)
+    assert pairs == [
+        (0, 7), (1, 2), (3, 4), (5, 6), (8, 9), (10, 11), (12, 13)
     ]
 
 def test_sparse_bm_to_dense():
@@ -154,62 +134,5 @@ def test_sparse_bm_to_dense():
         [0,0,0,0,0]
     ], np.float32)
 
-    dense = extended.sparse_bm_to_dense(sparse)
+    dense = Extended.sparse_bm_to_dense(sparse)
     np.testing.assert_array_equal(dense, expected)
-
-def test_bm_separation(triangle):
-    red_bm = [
-        (0, []),
-        (0, []),
-        (1, [0, 1]),
-        (0, []),
-        (1, [1, 3]),
-        (1, []),
-        (2, [2, 4, 5]),
-        (1, [0]),
-        (1, []),
-        (2, [4, 7, 8]),
-        (1, []),
-        (2, [2, 8, 10]),
-        (2, []),
-        (3, [6, 9, 11, 12])
-    ]
-
-    ord_expect = [
-        (0, []),
-        (0, []),
-        (1, [0, 1]),
-        (0, []),
-        (1, [1, 3]),
-        (1, []),
-        (2, [2, 4, 5]) 
-    ]
-
-    ext_expect = [
-        (1, [0]),
-        (1, []),
-        (2, [4]),
-        (1, []),
-        (2, [2]),
-        (2, []),
-        (3, [6])
-    ]
-
-    rel_expect = [
-        (1, []),
-        (1, []),
-        (2, [0, 1]),
-        (1, []),
-        (2, [1, 3]),
-        (2, []),
-        (3, [2, 4, 5])
-    ]
-    ordinary, ext, relative = extended.separate_boundary_matrix(red_bm)
-
-    assert ordinary == ord_expect
-    assert ext == ext_expect
-    assert relative == rel_expect
-
-
-
-
