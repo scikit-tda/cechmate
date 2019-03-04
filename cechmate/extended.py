@@ -34,6 +34,87 @@ from .solver import _simplices_to_sparse_pivot_column, _process_distances, _add_
 
 
 
+def diagrams(X, f):
+    bm, mapping = up_down_boundary_matrix(X, f)
+    mapping = dict(enumerate(mapping))
+    pairs = reduce_boundary_matrix(bm)
+
+    n = len(bm) / 2
+    ordinary_pairs = [(b,d) for (b,d) in pairs if b < n and d < n]
+    extended_pairs = [(b,d) for (b,d) in pairs if b < n and d >= n]
+    relative_pairs = [(b,d) for (b,d) in pairs if b >= n and d >= n]
+
+    # print(f"Ordinary: {ordinary_pairs}")
+    # print(f"Extended: {extended_pairs}")
+    # print(f"Relative: {relative_pairs}")
+
+    # for ps in [ordinary_pairs, extended_pairs, relative_pairs]:
+    #     res = [(mapping[b], mapping[d]) for b,d in ps]
+    #     # print(f"Mapping results:")
+    #     for x in res: print(f"\t{x}")
+
+    # assert len(ordinary_pairs) + len(extended_pairs) + len(relative_pairs) == len(pairs)
+
+    diagrams = {}
+
+    for b,d in ordinary_pairs:
+        order = len(mapping[b][0]) - 1
+        s = "ordinary"
+        diagrams.setdefault(order , {}).setdefault(s, []).append((mapping[b][1], mapping[d][1]))
+
+    for b,d in extended_pairs:
+        order = len(mapping[b][0]) - 1
+        s = "extended"
+        diagrams.setdefault(order , {}).setdefault(s, []).append((mapping[b][1], mapping[d][1]))
+        
+    for b,d in relative_pairs:
+        order = len(mapping[d][0]) - 1 # order computation is different!
+        s = "relative"
+        diagrams.setdefault(order , {}).setdefault(s, []).append((mapping[b][1], mapping[d][1]))
+    
+    diagrams = {h: {s:[(b,d) for b,d in ls if b != d] for s, ls in d.items()} for h,d in diagrams.items()}
+
+
+
+    return diagrams
+
+
+def example():
+    """ This example taken from the reeb graph in Carri`ere 2017 of Figure 4"""
+
+    f = {
+        1: 0.0,
+        2: 0.5,
+        3: 1.0,
+        4: 1.5,
+        5: 1.5,
+        6: 2.0,
+        7: 2.0,
+        8: 2.5, 
+        9: 3.0,
+        10: 3.5
+    }
+
+    X = [
+        [1], [2], [3], [4], [5], [6], [7], [8], [9], [10],
+        [1,3], [2,4], [3,4], [3,5], [4,6], [5,7], [7,9], [7,8], [6,8], [8,10]
+    ]
+
+    expected = {
+        0: {
+            "ordinary": [[0.5, 1.5]],
+            "extended": [[0.0, 3.5]],
+            "relative": [[]]
+        },
+        1: {
+            "ordinary": [[]],
+            "extended": [[2.5, 1.0]],
+            "relative": [[3.0, 2.0]]
+        }
+    }
+
+    return X, f, expected
+
 
 
 def star(X, v):
@@ -58,6 +139,12 @@ def up_down_boundary_matrix(X, f):
         Let A be the boundary matrix for the ascending pass, storing the simplices in blocks that correspond to the lower stars of v1 to vn, in this order.
 
         All simplices in the same block are assigned the same value, namely the height of the vertex defining the lower star.
+
+        Returns
+        --------
+
+        boundary matrix: sparse pivot column boundary matrix
+        f: mapping of simplices to function values
     """
     
 
@@ -89,13 +176,18 @@ def reduce_boundary_matrix(M):
         representation = phat.representations.sparse_pivot_column
     )
 
+    pairs = boundary_matrix.compute_persistence_pairs()
+    pairs.sort()
 
-    # bm = phat.reductions.chunk_reduction(boundary_matrix)
-    bm = boundary_matrix.compute_reduction()
-    # pairs.sort()
-    bm = [(c.dimension, c.boundary) for c in bm.columns]
+    # pairs = [for bi, di in pairs]
+    return list(pairs)
+
+    # # bm = phat.reductions.chunk_reduction(boundary_matrix)
+    # bm = boundary_matrix.compute_reduction()
+
+    # bm = [(c.dimension, c.boundary) for c in bm.columns]
     
-    return bm
+    # return bm
 
 def sparse_bm_to_dense(sparse_bm):
     """Return the sparse boundary matrix as a dense boundary matrix.
@@ -111,7 +203,7 @@ def sparse_bm_to_dense(sparse_bm):
     return dense
 
 
-def separate_boundary_matrix(bm):
+def get_diagrams(bm, f):
     """
     Note from CT:
     - For A, the birth values increase downward and the death values from left to right, so we need to turn the quadrant by 90◦ to get the ordinary sub-diagram. 
@@ -126,7 +218,9 @@ def separate_boundary_matrix(bm):
     assert len(bm) / 2 == n, "bm should have even dimension for both up and down pass."
     ordinary = bm[:n]
     extended = [(k, [c for c in cs if c < n]) for k, cs in bm[n:]]
-    relative = [(k, [c-n for c in cs if c >= n]) for k, cs in bm[n:]]
+
+    # import pdb; pdb.set_trace()
+    relative = [(k, [c for c in cs if c >= n]) for k, cs in bm[n:]]
 
 
     return ordinary, extended, relative

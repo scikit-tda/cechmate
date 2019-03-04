@@ -3,6 +3,42 @@ import pytest
 
 from cechmate import extended
 
+@pytest.fixture
+def reeb():
+    """ This example taken from the reeb graph in Carri`ere 2017 of Figure 4"""
+
+    f = {
+        1: 0.0,
+        2: 0.5,
+        3: 1.0,
+        4: 1.5,
+        5: 1.5,
+        6: 2.0,
+        7: 2.0,
+        8: 2.5, 
+        9: 3.0,
+        10: 3.5
+    }
+
+    X = [
+        [1], [2], [3], [4], [5], [6], [7], [8], [9], [10],
+        [1,3], [2,4], [3,4], [3,5], [4,6], [5,7], [7,9], [7,8], [6,8], [8,10]
+    ]
+
+    expected = {
+        0: {
+            "ordinary": [[0.5, 1.5]],
+            "extended": [[0.0, 3.5]],
+            "relative": [[]]
+        },
+        1: {
+            "ordinary": [[]],
+            "extended": [[2.5, 1.0]],
+            "relative": [[3.0, 2.0]]
+        }
+    }
+
+    return X, f, expected
 
 @pytest.fixture
 def X():
@@ -33,6 +69,20 @@ def triangle():
     f = {0:4.1, 1:1.1, 2:0.1}
 
     return X, f
+
+
+def test_reeb_known(reeb):
+    X, f, expected = reeb
+
+    bm, mapping = extended.up_down_boundary_matrix(X, f)
+    red_bm = extended.reduce_boundary_matrix(bm)
+
+    ordinary, ext, relative = extended.separate_boundary_matrix(red_bm)
+
+    import pdb; pdb.set_trace()
+    assert expected == ext
+
+
 
 def test_lower_star(triangle):
     X, f = triangle
@@ -154,14 +204,10 @@ def test_bm_separation(triangle):
         (2, []),
         (3, [2, 4, 5])
     ]
-
-    # import pdb; pdb.set_trace()
     ordinary, ext, relative = extended.separate_boundary_matrix(red_bm)
 
     assert ordinary == ord_expect
     assert ext == ext_expect
-
-    import pdb; pdb.set_trace()
     assert relative == rel_expect
 
 
