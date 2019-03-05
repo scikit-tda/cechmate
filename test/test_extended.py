@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
 
+import kmapper
+
 from cechmate import Extended
 from cechmate.filtrations.extended import _lower_star
 
@@ -72,7 +74,7 @@ def triangle():
 def test_reeb_known(reeb):
     X, f, expected = reeb
 
-    diagrams = Extended().diagrams(X, f)
+    diagrams = Extended(X, f).diagrams()
     assert expected == diagrams
 
 def test_lower_star(triangle):
@@ -88,10 +90,51 @@ def test_lower_star(triangle):
     assert len(lstar) == 2
     assert [0,1,2] not in lstar
 
+def test_from_kmapper_simplices():
+    km = kmapper.KeplerMapper()
+    data = np.random.random((300, 5))
+    lens = km.project(data)
+    graph = km.map(lens, data)
+
+    e = Extended.from_kmapper(graph, lens)
+
+    vs = [s for s in e.simplices if len(s) == 1]
+    ls = [s for s in e.simplices if len(s) == 2]
+    assert len(vs) == len(graph['nodes'])
+    assert len(ls) == sum(len(v) for v in graph['links'].values())
+    assert len(e.simplices) == len(graph['simplices'])
+
+def test_from_kmapper_mapping_lens():
+    km = kmapper.KeplerMapper()
+    np.random.seed(0)
+    data = np.random.random((300, 5))
+    lens = km.project(data)
+    graph = km.map(lens, data)
+
+    e = Extended.from_kmapper(graph, lens)
+
+    assert len(graph['nodes']) == len(e.f)
+    assert e.f[0] == np.mean(lens[graph['nodes']['cube0_cluster0']])
+
+
+def test_from_kmapper_mapping_nodes():
+    km = kmapper.KeplerMapper()
+    np.random.seed(0)
+    data = np.random.random((300, 5))
+    lens = km.project(data)
+    graph = km.map(lens, data)
+
+    f = {k: np.random.random() for k in graph['nodes']}
+    e = Extended.from_kmapper(graph, f)
+
+    assert len(f) == len(e.f)
+    assert e.f[0] == f['cube0_cluster0']
+
+
 def test_lower_boundary_matrix(triangle):
     X, f = triangle
 
-    bm, _ = Extended()._up_down_boundary_matrix(X, f)
+    bm, _ = Extended(X, f)._up_down_boundary_matrix(X, f)
     assert bm == [ # this was manually computed by @sauln
         (0, []), 
         (0, []), 
@@ -111,9 +154,10 @@ def test_lower_boundary_matrix(triangle):
 
 def test_reduction(triangle):
     X, f = triangle
-    bm, _ = Extended()._up_down_boundary_matrix(X, f)
+    e = Extended(X, f)
+    bm, _ = e._up_down_boundary_matrix(X, f)
 
-    pairs = Extended()._compute_persistence_pairs(bm)
+    pairs = e._compute_persistence_pairs(bm)
     assert pairs == [
         (0, 7), (1, 2), (3, 4), (5, 6), (8, 9), (10, 11), (12, 13)
     ]
