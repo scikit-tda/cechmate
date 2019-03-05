@@ -2,7 +2,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 from cechmate import __version__
-from theme_settings import *
+from sktda_docs_config import *
+
 
 project = u'Cechmate'
 copyright = u'2019, Chris Tralie and Nathaniel Saul'

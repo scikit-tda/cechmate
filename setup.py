@@ -39,10 +39,7 @@ setup(name='cechmate',
           'pytest-cov'
         ],
         'docs': [ # `pip install -e ".[docs]"`
-          'sphinx',
-          'nbsphinx',
-          'sphinx-better-theme',
-          'sphinxcontrib-fulltoc'
+          'sktda_docs_config'
         ]
       },
       python_requires='>=3.4',
