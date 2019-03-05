@@ -1,6 +1,3 @@
-
-
-
 import numpy as np
 import phat
 
@@ -14,23 +11,81 @@ class Extended(BaseFiltration):
     """
     This class computed the extended persistence of a simplicial complex. It requires input as a simplicial complex and a mapping on each vertex in the complex. It returns a dictionary storing the associated diagrams in each homology class.
 
-    The basic steps are:
+    The basic steps are to:
         - convert an abstract simplicial complex to the correct boundary matrix, using the lower-star up pass and upper-star down pass
         - read the reduced boundary matrix into birth-death pairs.
         - partition pairs into respective Ordinary/Extended/Relative diagrams.
+
+
+    Reference
+    -----------
+    Cohen-Steiner, David, Herbert Edelsbrunner, and John Harer. "Extending persistence using Poincaré and Lefschetz duality." Foundations of Computational Mathematics 9.1 (2009): 79-103.
+
+    Example
+    --------
+
+    See test cases for now.
+
     """
 
-    def __init__(self):
+    def __init__(self, simplices, f):
+        """
+
+
+        Inputs
+        -------
+        simplices: List[List]
+            Simplices 
+
+        f: dictionary mapping name of vertex to value.
+        """
+
+        self.simplices = simplices
+        self.f = f
+
         self._boundary_matrix = None
         self._mapping = None
         self._reduced_boundary_matrix = None
         self._pairs = None
         self.diagrams_ = None
 
-    def diagrams(self, X, f):
-        """ Compute diagrams of extended persistent homology.
+    @classmethod
+    def from_kmapper(cls, graph, f):
+        """Construct :code:`Extended` object from a Kepler Mapper graph output
+        
+        Inputs
+        -------
+
+        graph: dictionary
+            Output of the Kepler Mapper :code:`map` method.
+        f: List or Dict
+            Array with values for each member (like :code:`color_function`), or dictionary mapping for each node name.
         """
-        _, _ = self._up_down_boundary_matrix(X, f)
+
+        # Construct simplices from graph    
+        nodes_map = {v:k for k, v in enumerate(graph['nodes'])}
+        simplices = [[nodes_map[s] for s in simplex] for simplex in graph['simplices']]
+
+        # Construct mapping from f
+        if not isinstance(f, dict):
+            f = np.array(f)
+            mapping = {v: np.mean(f[graph['nodes'][n]]) for n, v in nodes_map.items()}  
+        else:
+            assert len(f) == len(nodes_map)
+            mapping = {nodes_map[k]: v for k, v in f.items()}
+
+        return Extended(simplices, mapping)
+
+    def diagrams(self):
+        """ Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices`and function :code:`f`.
+
+        """
+
+        # Only compute once
+        if self.diagrams_:
+            return self.diagrams_
+
+        _, _ = self._up_down_boundary_matrix(self.simplices, self.f)
         pairs = self._compute_persistence_pairs()
         diagrams = self._process_pairs(pairs)
 
@@ -38,14 +93,15 @@ class Extended(BaseFiltration):
         return self.diagrams_
 
     def _process_pairs(self, pairs):
+        """Split the persistence pairs out into their respective quadrants, adding them to their associated diagrams.
 
+        """
         n = len(self._boundary_matrix) / 2
         ordinary_pairs = [(b,d) for (b,d) in pairs if b < n and d < n]
         extended_pairs = [(b,d) for (b,d) in pairs if b < n and d >= n]
         relative_pairs = [(b,d) for (b,d) in pairs if b >= n and d >= n]
 
         diagrams = {}
-
         self._extract_diagram(
             diagrams, 
             ordinary_pairs, 
@@ -58,7 +114,6 @@ class Extended(BaseFiltration):
             "extended", 
             lambda b,d: len(self._mapping[b][0]) - 1
         )
-
         self._extract_diagram(
             diagrams, 
             relative_pairs, 
@@ -75,6 +130,8 @@ class Extended(BaseFiltration):
         return diagrams
 
     def _extract_diagram(self, diagrams, pairs, pairs_str, order_f):
+        """Operate on diagrams in place. Add pairs to diagram according to the order_f and self._mapping values.
+        """
         for b,d in pairs:
             order = order_f(b,d)
             diagrams.setdefault(order , {}).setdefault(pairs_str, []).append((self._mapping[b][1], self._mapping[d][1]))
@@ -130,7 +187,6 @@ class Extended(BaseFiltration):
         pairs.sort()
         self._pairs = list(pairs)
         return self._pairs
-
 
     @staticmethod
     def sparse_bm_to_dense(sparse_bm):
