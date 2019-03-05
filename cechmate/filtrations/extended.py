@@ -71,10 +71,41 @@ class Extended(BaseFiltration):
             f = np.array(f)
             mapping = {v: np.mean(f[graph['nodes'][n]]) for n, v in nodes_map.items()}  
         else:
-            assert len(f) == len(nodes_map)
+            assert len(f) == len(nodes_map), "Each node should have a value in f."
             mapping = {nodes_map[k]: v for k, v in f.items()}
 
         return Extended(simplices, mapping)
+
+    @classmethod
+    def from_nx(cls, graph, f):
+        """Construct :code:`Extended` object from an nx.Graph object.
+        
+        Inputs
+        -------
+
+        graph: nx.Graph
+            Graph to compute extended persistence on.
+        f: Dict or String
+            Dictionary mapping node to value or string corresponding to node attribute that should be used for mapping.
+        """
+
+        assert isinstance(f, dict) or isinstance(f, str), "f must be of type dict or str. It is type {}".format(type(f))
+
+        try:
+            import networkx as nx # internal import so that network isn't always required
+        except ImportError as e:
+            import sys
+            raise type(e)(str(e) +
+                      'Networkx package is required for `from_nx` constructor. Please install with `pip install networkx`').with_traceback(sys.exc_info()[2])
+
+        simplices = list(graph.nodes)
+        simplices.extend(list(graph.edges))
+
+        if isinstance(f, str):
+            f = nx.get_node_attributes(graph, f)
+
+        return Extended(simplices, f)
+
 
     def diagrams(self):
         """ Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices`and function :code:`f`.

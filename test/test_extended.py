@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import kmapper
+import networkx as nx
 
 from cechmate import Extended
 from cechmate.filtrations.extended import _lower_star
@@ -90,45 +91,6 @@ def test_lower_star(triangle):
     assert len(lstar) == 2
     assert [0,1,2] not in lstar
 
-def test_from_kmapper_simplices():
-    km = kmapper.KeplerMapper()
-    data = np.random.random((300, 5))
-    lens = km.project(data)
-    graph = km.map(lens, data)
-
-    e = Extended.from_kmapper(graph, lens)
-
-    vs = [s for s in e.simplices if len(s) == 1]
-    ls = [s for s in e.simplices if len(s) == 2]
-    assert len(vs) == len(graph['nodes'])
-    assert len(ls) == sum(len(v) for v in graph['links'].values())
-    assert len(e.simplices) == len(graph['simplices'])
-
-def test_from_kmapper_mapping_lens():
-    km = kmapper.KeplerMapper()
-    np.random.seed(0)
-    data = np.random.random((300, 5))
-    lens = km.project(data)
-    graph = km.map(lens, data)
-
-    e = Extended.from_kmapper(graph, lens)
-
-    assert len(graph['nodes']) == len(e.f)
-    assert set(e.f.values()) == set(np.mean(lens[v]) for v in graph['nodes'].values())
-
-def test_from_kmapper_mapping_nodes():
-    km = kmapper.KeplerMapper()
-    np.random.seed(0)
-    data = np.random.random((300, 5))
-    lens = km.project(data)
-    graph = km.map(lens, data)
-
-    f = {k: np.random.random() for k in graph['nodes']}
-    e = Extended.from_kmapper(graph, f)
-
-    assert len(f) == len(e.f)
-    assert set(e.f.values()) == set(f.values())
-
 def test_lower_boundary_matrix(triangle):
     X, f = triangle
 
@@ -178,3 +140,61 @@ def test_sparse_bm_to_dense():
 
     dense = Extended.sparse_bm_to_dense(sparse)
     np.testing.assert_array_equal(dense, expected)
+
+
+class TestConstructors:
+    def test_from_kmapper_simplices(self):
+        km = kmapper.KeplerMapper()
+        data = np.random.random((300, 5))
+        lens = km.project(data)
+        graph = km.map(lens, data)
+
+        e = Extended.from_kmapper(graph, lens)
+
+        vs = [s for s in e.simplices if len(s) == 1]
+        ls = [s for s in e.simplices if len(s) == 2]
+        assert len(vs) == len(graph['nodes'])
+        assert len(ls) == sum(len(v) for v in graph['links'].values())
+        assert len(e.simplices) == len(graph['simplices'])
+
+    def test_from_kmapper_mapping_lens(self):
+        km = kmapper.KeplerMapper()
+        np.random.seed(0)
+        data = np.random.random((300, 5))
+        lens = km.project(data)
+        graph = km.map(lens, data)
+
+        e = Extended.from_kmapper(graph, lens)
+
+        assert len(graph['nodes']) == len(e.f)
+        assert set(e.f.values()) == set(np.mean(lens[v]) for v in graph['nodes'].values())
+
+    def test_from_kmapper_mapping_nodes(self):
+        km = kmapper.KeplerMapper()
+        np.random.seed(0)
+        data = np.random.random((300, 5))
+        lens = km.project(data)
+        graph = km.map(lens, data)
+
+        f = {k: np.random.random() for k in graph['nodes']}
+        e = Extended.from_kmapper(graph, f)
+
+        assert len(f) == len(e.f)
+        assert set(e.f.values()) == set(f.values())
+
+    def test_from_nx_weights(self):
+        g = nx.tutte_graph()
+        vals = {n: np.random.random() for n in g.nodes}
+        nx.set_node_attributes(g, vals, "weight_str")
+        e = Extended.from_nx(g, "weight_str")
+
+        assert len(e.simplices) == len(g.nodes) + len(g.edges)
+        assert set(vals.values()) == set(e.f.values())
+
+    def test_from_nx_map(self):      
+        g = nx.tutte_graph()
+        vals = {n: np.random.random() for n in g.nodes}
+        e = Extended.from_nx(g, vals)
+
+        assert len(e.simplices) == len(g.nodes) + len(g.edges)
+        assert set(vals.values()) == set(e.f.values())
