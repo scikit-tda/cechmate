@@ -41,6 +41,7 @@ setup(name='cechmate',
           'pytest-cov'
         ],
         'docs': [ # `pip install -e ".[docs]"`
+          'ipython',
           'sphinx',
           'nbsphinx',
           'sphinx-better-theme',

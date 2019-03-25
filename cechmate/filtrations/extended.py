@@ -17,23 +17,19 @@ class Extended(BaseFiltration):
         - partition pairs into respective Ordinary/Extended/Relative diagrams.
 
 
-    Reference
-    -----------
+    References
+    ===========
+
     Cohen-Steiner, David, Herbert Edelsbrunner, and John Harer. "Extending persistence using Poincaré and Lefschetz duality." Foundations of Computational Mathematics 9.1 (2009): 79-103.
-
-    Example
-    --------
-
-    See test cases for now.
 
     """
 
     def __init__(self, simplices, f):
-        """
+        """Initialize Extended persistence class. 
 
+        Parameters
+        ============
 
-        Inputs
-        -------
         simplices: List[List]
             Simplices 
 
@@ -53,8 +49,8 @@ class Extended(BaseFiltration):
     def from_kmapper(cls, graph, f):
         """Construct :code:`Extended` object from a Kepler Mapper graph output
         
-        Inputs
-        -------
+        Parameters
+        ===========
 
         graph: dictionary
             Output of the Kepler Mapper :code:`map` method.
@@ -80,8 +76,8 @@ class Extended(BaseFiltration):
     def from_nx(cls, graph, f):
         """Construct :code:`Extended` object from an nx.Graph object.
         
-        Inputs
-        -------
+        Parameters
+        ===========
 
         graph: nx.Graph
             Graph to compute extended persistence on.
@@ -106,9 +102,14 @@ class Extended(BaseFiltration):
 
         return Extended(simplices, f)
 
-
     def diagrams(self):
-        """ Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices`and function :code:`f`.
+        """ Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices` and function :code:`f`.
+
+        Returns
+        =========
+
+        diagrams:
+            Extended persistence diagrams
 
         """
 
@@ -174,7 +175,7 @@ class Extended(BaseFiltration):
             All simplices in the same block are assigned the same value, namely the height of the vertex defining the lower star.
 
             Returns
-            --------
+            ========
 
             boundary matrix: sparse pivot column boundary matrix
             f: mapping of simplices to function values
@@ -219,19 +220,7 @@ class Extended(BaseFiltration):
         self._pairs = list(pairs)
         return self._pairs
 
-    @staticmethod
-    def sparse_bm_to_dense(sparse_bm):
-        """Return the sparse boundary matrix as a dense boundary matrix.
 
-        This is used for visualization and debugging as dense boundary matrices are subjectively easier to read.
-        """
-        n = len(sparse_bm)
-        dense = np.zeros((n,n))
-        
-        for i, (_, c) in enumerate(sparse_bm):
-            dense[c, i] = 1 
-
-        return dense
 
 
 def _star(X, v):
