@@ -35,7 +35,7 @@ class Cover(BaseFiltration):
             expectedN = scipy.special.comb(len(covers.keys()), k)
             for i, potentials in enumerate(itertools.combinations(covers.keys(), k)):
                 if not i % 500:
-                    print(f" -- run {i} / {expectedN}\r", end="")
+                    print(" -- run {} / {}\r".format(i, expectedN), end="")
                 
                 potential_sets = [covers[p] for p in potentials]
 
