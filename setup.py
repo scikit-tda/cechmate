@@ -38,6 +38,8 @@ setup(name='cechmate',
         'testing': [
           'pytest-cov',
           'mock'
+          'kmapper',
+          'networkx',
         ],
         'docs': [ # `pip install -e ".[docs]"`
           'sktda_docs_config'
