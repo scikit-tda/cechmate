@@ -122,24 +122,6 @@ def test_reduction(triangle):
         (0, 7), (1, 2), (3, 4), (5, 6), (8, 9), (10, 11), (12, 13)
     ]
 
-def test_sparse_bm_to_dense():
-    sparse = [
-        (0, []),
-        (0, []),
-        (1, [0, 1]),
-        (0, []),
-        (1, [1, 3])
-    ]    
-    expected = np.array([
-        [0,0,1,0,0],
-        [0,0,1,0,1],
-        [0,0,0,0,0],
-        [0,0,0,0,1],
-        [0,0,0,0,0]
-    ], np.float32)
-
-    dense = Extended.sparse_bm_to_dense(sparse)
-    np.testing.assert_array_equal(dense, expected)
 
 
 class TestConstructors:
