@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 import re
@@ -25,7 +25,7 @@ setup(name='cechmate',
       author_email='chris.tralie@gmail.com, nat@saulgill.com',
       url='https://cechmate.scikit-tda.org',
       license='MIT',
-      packages=['cechmate'],
+      packages=find_packages(),
       include_package_data=True,
       install_requires=[
         'scipy',
@@ -41,11 +41,7 @@ setup(name='cechmate',
           'pytest-cov'
         ],
         'docs': [ # `pip install -e ".[docs]"`
-          'ipython',
-          'sphinx',
-          'nbsphinx',
-          'sphinx-better-theme',
-          'sphinxcontrib-fulltoc'
+          'sktda_docs_config'
         ]
       },
       python_requires='>=3.4',

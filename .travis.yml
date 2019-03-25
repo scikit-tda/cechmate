@@ -11,7 +11,7 @@ matrix:
       sudo: true
 
 install:
-
+  - pip install pybind11
   - pip install -e ".[testing]"
 
 script:
