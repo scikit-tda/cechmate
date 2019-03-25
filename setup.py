@@ -36,6 +36,8 @@ setup(name='cechmate',
       ],
       extras_require={ # use `pip install -e ".[testing]"`
         'testing': [
+          'kmapper',
+          'networkx',
           'pytest-cov'
         ],
         'docs': [ # `pip install -e ".[docs]"`
