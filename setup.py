@@ -36,7 +36,8 @@ setup(name='cechmate',
       ],
       extras_require={ # use `pip install -e ".[testing]"`
         'testing': [
-          'pytest-cov'
+          'pytest-cov',
+          'mock'
         ],
         'docs': [ # `pip install -e ".[docs]"`
           'sktda_docs_config'
