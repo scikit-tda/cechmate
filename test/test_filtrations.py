@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from cechmate import plot_diagram, phat_diagrams, Alpha, Rips
+from cechmate import phat_diagrams, Alpha, Rips
 
 
 def test_phat_diagrams():

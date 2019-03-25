@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 import re
@@ -18,22 +18,34 @@ with open('README.md') as f:
 
 setup(name='cechmate',
       version=verstr,
-      description='Custom filtration builders.',
+      description='Custom filtration constructors for Python',
       long_description=long_description,
       long_description_content_type="text/markdown",	
-      author='Christopher Tralie and Nathaniel Saul',
-      author_email='chris.tralie@gmail.com and nat@saulgill.com',
-      url='https://github.com/scikit-tda/cechmate',
+      author='Christopher Tralie, Nathaniel Saul',
+      author_email='chris.tralie@gmail.com, nat@saulgill.com',
+      url='https://cechmate.scikit-tda.org',
       license='MIT',
-      packages=['cechmate'],
+      packages=find_packages(),
       include_package_data=True,
       install_requires=[
         'scipy',
         'numpy',
         'matplotlib',
-        'phat'
+        'phat',
+        'persim'
       ],
-      python_requires='>=2.7,!=3.1,!=3.2,!=3.3',
+      extras_require={ # use `pip install -e ".[testing]"`
+        'testing': [
+          'pytest-cov',
+          'mock'
+          'kmapper',
+          'networkx',
+        ],
+        'docs': [ # `pip install -e ".[docs]"`
+          'sktda_docs_config'
+        ]
+      },
+      python_requires='>=3.4',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
@@ -43,11 +55,10 @@ setup(name='cechmate',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Mathematics',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
       ],
-      keywords='persistent homology, persistence images, persistence diagrams, topology data analysis, algebraic topology, unsupervised learning'
+      keywords='persistent homology, persistence images, persistence diagrams, topology data analysis, algebraic topology, unsupervised learning, filtrations, Cech, Alpha, Rips'
      )

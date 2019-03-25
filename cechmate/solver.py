@@ -7,25 +7,28 @@ import phat
 
 def phat_diagrams(simplices, show_inf=False, verbose=True):
     """
-    Do a custom filtration wrapping around phat
+    Compute the persistence diagram for :code:`simplices` using Phat.
 
-    Inputs
-    -------
+    Parameters
+    -----------
     simplices: A list of lists of simplices and their distances
         the kth element is itself a list of tuples ([idx1, ..., idxk], dist)
         where [idx1, ..., idxk] is a list of vertices involved in the simplex
         and "dist" is the distance at which the simplex is added
-    hide_infs: Whether or not to return points that never die
+
+    show_inf: Boolean
+        Determines whether or not to return points that never die.
 
     Returns
     --------
-    dgms: A dictionary of persistence diagrams, where dgms[k] is 
+    dgms: list of diagrams 
         the persistence diagram for Hk 
     """
 
     ## Convert simplices representation to sparse pivot column
-    ordered_simplices = sorted(simplices, key=lambda x: x[1])
-    columns = simplices_to_sparse_pivot_column(ordered_simplices, verbose)
+    #  -- sort by birth time, if tie, use order of simplex
+    ordered_simplices = sorted(simplices, key=lambda x: (x[1], len(x[0])))
+    columns = _simplices_to_sparse_pivot_column(ordered_simplices, verbose)
 
     ## Setup boundary matrix and reduce
     if verbose:
@@ -45,19 +48,19 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
         )
 
     ## Setup persistence diagrams by reading off distances
-    dgms = process_distances(pairs, ordered_simplices)
+    dgms = _process_distances(pairs, ordered_simplices)
 
     ## Add all unpaired simplices as infinite points
     if show_inf:
-        dgms = add_unpaired(dgms, pairs, simplices)
+        dgms = _add_unpaired(dgms, pairs, simplices)
 
     ## Convert to arrays:
-    dgms = {i: np.array(dgm) for i, dgm in dgms.items()}
+    dgms = [np.array(dgm) for dgm in dgms.values()]
 
     return dgms
 
 
-def simplices_to_sparse_pivot_column(ordered_simplices, verbose):
+def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
     """
 
     """
@@ -104,7 +107,7 @@ def simplices_to_sparse_pivot_column(ordered_simplices, verbose):
     return columns
 
 
-def process_distances(pairs, ordered_simplices):
+def _process_distances(pairs, ordered_simplices):
     """ Setup persistence diagrams by reading off distances
     """
 
@@ -119,7 +122,7 @@ def process_distances(pairs, ordered_simplices):
         posneg[bi], posneg[di] = 1, -1
 
         assert dd >= bd
-        assert len(bidxs) == len(didxs) - 1
+        # assert len(bidxs) == len(didxs) - 1
 
         p = len(bidxs) - 1
 
@@ -130,7 +133,7 @@ def process_distances(pairs, ordered_simplices):
     return dgms
 
 
-def add_unpaired(dgms, pairs, simplices):
+def _add_unpaired(dgms, pairs, simplices):
     posneg = np.zeros(len(simplices))
     for [bi, di] in pairs:
         assert posneg[bi] == 0

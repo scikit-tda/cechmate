@@ -15,8 +15,6 @@ def test_1d_solver():
     ]
 
     dgms = phat_diagrams(filt)
-    print(dgms)
-    assert [0] == list(dgms.keys())
 
     assert len(dgms[0]) == 2
     assert [0, 0.5] in dgms[0].tolist()
@@ -35,8 +33,7 @@ def test_infs():
     ]
 
     dgms = phat_diagrams(filt, show_inf=True)
-    print(dgms)
-    assert 0 in list(dgms.keys()) and 1 in list(dgms.keys())
-    assert len(dgms.keys()) == 2
+
+    assert len(dgms) == 2
 
     assert [0.7, np.inf] in dgms[1].tolist()

@@ -4,14 +4,35 @@ import numpy as np
 from .base import BaseFiltration
 from .miniball import miniball_cache
 
+
+__all__ = ["Cech"]
+
 class Cech(BaseFiltration):
+    """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
+
+    Examples
+    ========
+
+        >>> r = Cech(max_dim=3)
+        >>> simplices = r.build(X)
+        >>> diagrams = r.diagrams(simplices)
+
+    """
+
     def build(self, X):
-        """
-        Compute the Cech filtration of a Euclidean point set for simplices up to order `self.max_dim`.
+        """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
 
-        :param X: An Nxd array of N Euclidean vectors in d dimensions
+        Parameters
+        ===========
+        
+        X: Nxd array
+            N Euclidean vectors in d dimensions
 
-        :returns simplices: Cech filtration for the data X
+        Returns
+        ==========
+        
+        simplices: 
+            Cech filtration for the data X
         """
 
         N = X.shape[0]
@@ -29,9 +50,6 @@ class Cech(BaseFiltration):
                 C, r2 = miniball(frozenset(idxs), frozenset([]))
                 simplices.append((list(idxs), np.sqrt(r2)))
 
+        self.simplices_ = simplices
+
         return simplices
-
-
-
-
-
