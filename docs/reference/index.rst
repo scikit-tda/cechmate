@@ -1,6 +1,8 @@
 API Reference
 --------------
 
+.. currentmodule:: cechmate
+
 Filtrations
 ===================
 
@@ -8,9 +10,11 @@ Filtrations
     :toctree: stubs
     :nosignatures:
 
-    cechmate.filtrations.Alpha
-    cechmate.filtrations.Rips
-    cechmate.filtrations.Cech
+    filtrations.Alpha
+    filtrations.Cech
+    filtrations.Extended
+    filtrations.Rips
+
 
 Solvers
 ================
@@ -19,4 +23,14 @@ Solvers
     :toctree: stubs
     :nosignatures:
 
-    cechmate.solver.phat_diagrams
+    solver.phat_diagrams
+
+Utilities
+=============
+
+.. autosummary::
+    :toctree: stubs
+    :nosignatures:
+
+    utils.sparse_to_dense
+

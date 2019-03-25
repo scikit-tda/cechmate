@@ -4,3 +4,5 @@ __pycache__
 cechmate.egg-info
 .ipynb_checkpoints
 .DS_Store
+
+stubs
