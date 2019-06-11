@@ -39,7 +39,7 @@ class Rips(BaseFiltration):
             maxdim = 1
         # First add all 0 simplices
         simplices = [([i], 0) for i in range(N)]
-        for k in range(self.maxdim + 1):
+        for k in range(maxdim + 1):
             # Add all (k+1)-simplices, which have (k+2) vertices
             for idxs in itertools.combinations(xrl, k + 2):
                 idxs = list(idxs)
