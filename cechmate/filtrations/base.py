@@ -8,20 +8,20 @@ class BaseFiltration:
     """Base filtration that implements constructor and `diagrams` method.
     """
  
-    def __init__(self, max_dim=3, verbose=True):
+    def __init__(self, maxdim=None, verbose=True):
         """Default constructor
         
         Parameters
         ----------
 
-        max_dim: int
-            Maximum dimension of simplices returned in constructed filtration.
+        maxdim: int
+            Maximum dimension of homology to compute
         verbose: boolean
             If True, then print logging statements.
 
         """
 
-        self.max_dim = max_dim
+        self.maxdim = maxdim
         self.verbose = verbose
 
         self.simplices_ = None

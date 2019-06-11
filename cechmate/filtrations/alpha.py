@@ -26,18 +26,6 @@ class Alpha(BaseFiltration):
 
     """
 
-    def __init__(self, verbose=None):
-        """Default constructor
-
-        Parameters
-        ----------
-
-        verbose: boolean
-            If True, then print logging statements.
-
-        """
-        super().__init__(verbose=verbose)
-
     def build(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
@@ -53,7 +41,9 @@ class Alpha(BaseFiltration):
                 "The input point cloud has more columns than rows; "
                 + "did you mean to transpose?"
             )
-        maxdim = X.shape[1] - 1
+        maxdim = self.maxdim
+        if not self.maxdim:
+            maxdim = X.shape[1] - 1
 
         ## Step 1: Figure out the filtration
         if self.verbose:

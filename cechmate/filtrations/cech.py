@@ -13,7 +13,7 @@ class Cech(BaseFiltration):
     Examples
     ========
 
-        >>> r = Cech(max_dim=3)
+        >>> r = Cech(maxdim=1)
         >>> simplices = r.build(X)
         >>> diagrams = r.diagrams(simplices)
 
@@ -38,6 +38,9 @@ class Cech(BaseFiltration):
         N = X.shape[0]
         xr = np.arange(N)
         xrl = xr.tolist()
+        maxdim = self.maxdim
+        if not self.maxdim:
+            maxdim = X.shape[1] - 1
 
         miniball = miniball_cache(X)
 
@@ -45,7 +48,7 @@ class Cech(BaseFiltration):
         simplices = [([i], 0) for i in range(N)]
 
         # then higher order simplices
-        for k in range(self.max_dim + 1):
+        for k in range(maxdim + 1):
             for idxs in itertools.combinations(xrl, k + 2):
                 C, r2 = miniball(frozenset(idxs), frozenset([]))
                 simplices.append((list(idxs), np.sqrt(r2)))
