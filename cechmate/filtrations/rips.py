@@ -11,7 +11,7 @@ class Rips(BaseFiltration):
     Examples
     ========
 
-        >>> r = Rips(max_dim=3)
+        >>> r = Rips(maxdim=1)
         >>> simplices = r.build(X)
         >>> diagrams = r.diagrams(simplices)
 
@@ -34,9 +34,12 @@ class Rips(BaseFiltration):
         N = D.shape[0]
         xr = np.arange(N)
         xrl = xr.tolist()
+        maxdim = self.maxdim
+        if not maxdim:
+            maxdim = 1
         # First add all 0 simplices
         simplices = [([i], 0) for i in range(N)]
-        for k in range(self.max_dim + 1):
+        for k in range(self.maxdim + 1):
             # Add all (k+1)-simplices, which have (k+2) vertices
             for idxs in itertools.combinations(xrl, k + 2):
                 idxs = list(idxs)
