@@ -45,8 +45,8 @@ class Alpha(BaseFiltration):
                 + "did you mean to transpose?"
             )
         maxdim = self.maxdim
-        if not self.maxdim:
-            maxdim = X.shape[1] - 1
+        if self.maxdim is None:
+            maxdim = X.shape[1]
 
         ## Step 1: Figure out the filtration
         if self.verbose:
@@ -65,10 +65,10 @@ class Alpha(BaseFiltration):
 	
         miniball = miniball_cache(X)
         filtration = {}
-        for dim in range(maxdim + 2, 1, -1):
+        for dim in range(maxdim, 0, -1):
             for s in range(delaunay_faces.shape[0]):
                 simplex = delaunay_faces[s, :]
-                for sigma in itertools.combinations(simplex, dim):
+                for sigma in itertools.combinations(simplex, dim + 1):
                     sigma = tuple(sorted(sigma))
                     if not sigma in filtration:
                         C, r2 = miniball(frozenset(sigma), frozenset([]))
@@ -76,12 +76,10 @@ class Alpha(BaseFiltration):
 
         ## Step 2: Take care of numerical artifacts that may result
         ## in simplices with greater filtration values than their co-faces
-        simplices_bydim = {dim: filter(lambda x: len(x) == dim, filtration.keys())
-                            for dim in range(maxdim + 2, 2, -1)}
-        for dim in range(maxdim + 2, 2, -1):
-            for sigma in simplices_bydim[dim]:
-                for i in range(dim):
-                    tau = sigma[0:i] + sigma[i + 1 : :]
+        for dim in range(maxdim, 1, -1):
+            for sigma in filter(lambda x: len(x) == dim + 1, filtration.keys()):
+                for i in range(len(sigma)):
+                    tau = sigma[:i] + sigma[i + 1:]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
         
