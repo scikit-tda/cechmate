@@ -15,6 +15,14 @@ def test_alpha():
     phattime = time.time() - tic
 
 
+def test_alpha_dim():
+    ambient_dim = 3
+    X = np.random.randn(15, ambient_dim)
+    simplices, filtration = zip(*Alpha().build(X))
+    max_simplex_dim = max(map(len, simplices)) - 1
+    assert max_simplex_dim == ambient_dim
+
+
 def test_alpha_filtration_is_not_too_large():
     # https://github.com/scikit-tda/cechmate/issues/10
     # The points from the following test set are
