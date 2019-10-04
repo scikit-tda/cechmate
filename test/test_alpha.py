@@ -20,6 +20,13 @@ def test_alpha_dim():
     assert max_simplex_dim == ambient_dim
 
 
+def test_simplex_format():
+    # Each simplex should be a list
+    X = np.random.randn(10, 2)
+    simplices, filtration = zip(*Alpha().build(X))
+    assert all(map(lambda o: isinstance(o, list), simplices))
+
+
 def test_alpha_filtration_is_not_too_large():
     # https://github.com/scikit-tda/cechmate/issues/10
     # The points from the following test set are

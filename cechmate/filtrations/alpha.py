@@ -90,7 +90,7 @@ class Alpha(BaseFiltration):
             )
 
         simplices = [([i], 0) for i in range(X.shape[0])]
-        simplices.extend(filtration.items())
+        simplices.extend([(list(simplex), filtr) for (simplex, filtr) in filtration.items()])
 
         self.simplices_ = simplices
 
