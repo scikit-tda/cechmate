@@ -6,13 +6,10 @@ from cechmate import Alpha
 
 
 def test_alpha():
-
     # Make a 3-sphere in 4 dimensions
     X = np.random.randn(15, 4)
     X = X / np.sqrt(np.sum(X ** 2, 1)[:, None])
-    tic = time.time()
-    diagrams = Alpha().build(X)
-    phattime = time.time() - tic
+    alpha_cplx = Alpha().build(X)
 
 
 def test_alpha_dim():
