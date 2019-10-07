@@ -30,3 +30,12 @@ def test_rips():
     X += 0.2 * np.random.randn(len(t), 2)
     rips = Rips(1).build(X)
 
+
+def test_alpha():
+
+    # Make a 3-sphere in 4 dimensions
+    X = np.random.randn(15, 4)
+    X = X / np.sqrt(np.sum(X ** 2, 1)[:, None])
+    tic = time.time()
+    diagrams = Alpha().build(X)
+    phattime = time.time() - tic
