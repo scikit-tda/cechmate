@@ -4,6 +4,7 @@ import time
 import numpy as np
 import numpy.linalg as linalg
 from scipy import spatial
+from scipy.spatial import ConvexHull
 
 from .base import BaseFiltration
 
@@ -26,7 +27,7 @@ class Alpha(BaseFiltration):
 
     """
 
-    def build(self, X):
+    def build(self, X, weights=[]):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
         
@@ -34,8 +35,13 @@ class Alpha(BaseFiltration):
         ===========
         X: Nxd array
             Array of N Euclidean vectors in d dimensions
+        weights : Nx1 array
+            Array of weights (default is non-weighted)
+                  
         """
-
+        self.weights = weights
+        
+        
         if X.shape[0] < X.shape[1]:
             warnings.warn(
                 "The input point cloud has more columns than rows; "
@@ -47,14 +53,17 @@ class Alpha(BaseFiltration):
 
         ## Step 1: Figure out the filtration
         if self.verbose:
-            print("Doing spatial.Delaunay triangulation...")
+            print("Doing Delaunay triangulation...")
             tic = time.time()
-
-        delaunay_faces = spatial.Delaunay(X).simplices
+        
+        if not np.shape(self.weights)[0]==0:
+            delaunay_faces = self._weighted_delaunay(X)
+        else:
+            delaunay_faces = spatial.Delaunay(X).simplices
         
         if self.verbose:
             print(
-                "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
+                "Finished Delaunay triangulation (Elapsed Time %.3g)"
                 % (time.time() - tic)
             )
             print("Building alpha filtration...")
@@ -169,3 +178,46 @@ class Alpha(BaseFiltration):
                 x = x.dot(V.T) + muV
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
+    
+    def _weighted_delaunay(self, X):
+        """
+        Computes a weighted delaunay triangulation using the duality of delaunay triangulation with a convex hull of a dimension higher
+        This function is triggered if a weight function is input to build the Alpha filtration 
+        and replaces the delaunay triangulation of scipy.
+        
+        Returns
+        -------
+        Triangular faces from a weighted delaunay triangulation in the form of a numpy array. 
+        Similar to the output from scipy.spatial.Delaunay
+
+        """
+        num, dim = np.shape(X)
+
+        lifted = np.zeros((num,dim+1))
+
+        for i in range(num):
+            p = X[i,:]
+            lifted[i,:] = np.append(p,np.sum(p**2) - self.weights[i]**2)
+        pinf = np.append(np.zeros((1,dim)),1e10);    
+        lifted = np.vstack((lifted, pinf))
+        hull = ConvexHull(lifted)
+        delaunay = []
+        for simplex in hull.simplices:
+            if num not in simplex:
+                delaunay.append(simplex.tolist())
+
+        return np.asarray(delaunay)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
