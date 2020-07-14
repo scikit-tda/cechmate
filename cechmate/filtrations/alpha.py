@@ -4,6 +4,7 @@ import time
 import numpy as np
 import numpy.linalg as linalg
 from scipy import spatial
+from scipy.linalg import qr
 
 from .base import BaseFiltration
 
@@ -81,8 +82,6 @@ class Alpha(BaseFiltration):
                             xtau, rtauSqr = self._get_circumcenter(X[tau, :])
                             if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
                                 filtration[tau] = filtration[sigma]
-        for f in filtration:
-            filtration[f] = np.sqrt(filtration[f])
 
         ## Step 2: Take care of numerical artifacts that may result
         ## in simplices with greater filtration values than their co-faces
@@ -143,12 +142,20 @@ class Alpha(BaseFiltration):
         muV = np.array([])
         V = np.array([])
         if X.shape[0] < X.shape[1] + 1:
-            # SC1: Do PCA down to NPoints-1
+            # SC1: Do dimension reduction down to NPoints-1
             muV = np.mean(X, 0)
-            XCenter = X - muV
-            _, V = linalg.eigh((XCenter.T).dot(XCenter))
-            V = V[:, (X.shape[1] - X.shape[0] + 1) : :]  # Put dimension NPoints-1
-            X = XCenter.dot(V)
+            # Move first point to origin
+            x0 = X[0, :]
+            X = X - x0[None, :]
+            # Come up with basis
+            # Normalize rows for numerical stability
+            norms = np.sqrt(np.sum(X[1::, :]**2, 1))
+            norms[norms == 0] = 1
+            U = X[1::, :] / norms[:, None]
+            V, _ = qr(U.T) # Columns of V hold orthogonal basis
+            V = V[:, 0:U.shape[0]]
+            # Project onto basis
+            X = X.dot(V)
         muX = np.mean(X, 0)
         D = np.ones((X.shape[0], X.shape[0] + 1))
         # Subtract off centroid for numerical stability
