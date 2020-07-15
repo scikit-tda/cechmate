@@ -37,4 +37,4 @@ To contribute please fork the project make your changes and submit a pull reques
 
 ## Documentation
 
-Check out complete documentation at [cechmate.scikit-tda.org](http://www.cechmate.scikit-tda.org/)
+Check out complete documentation at [cechmate.scikit-tda.org](https://cechmate.scikit-tda.org/)

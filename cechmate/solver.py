@@ -87,7 +87,7 @@ def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
                 fidxs = np.array(list(fidxs))
                 fidxs = tuple(idxs[fidxs])
                 if not fidxs in idxs2order:
-                    print(
+                    raise Exception(
                         "Error: Not a proper filtration: %s added before %s"
                         % (idxs, fidxs)
                     )
