@@ -2,7 +2,7 @@ import itertools
 import time
 
 import numpy as np
-import numpy.linalg as linalg
+from numpy import linalg
 from scipy import spatial
 
 from .base import BaseFiltration
@@ -25,6 +25,7 @@ class Alpha(BaseFiltration):
         >>> diagrams = r.diagrams(simplices)
 
     """
+    MIN_DET = 1e-10
 
     def build(self, X):
         """
@@ -61,35 +62,40 @@ class Alpha(BaseFiltration):
             tic = time.time()
 
         filtration = {}
-        simplices_bydim = {}
         for dim in range(maxdim + 2, 1, -1):
-            simplices_bydim[dim] = []
             for s in range(delaunay_faces.shape[0]):
                 simplex = delaunay_faces[s, :]
                 for sigma in itertools.combinations(simplex, dim):
                     sigma = tuple(sorted(sigma))
-                    simplices_bydim[dim].append(sigma)
                     if not sigma in filtration:
-                        filtration[sigma] = self._get_circumcenter(X[sigma, :])[1]
-                    for i in range(dim):
-                        # Propagate alpha filtration value
-                        tau = sigma[0:i] + sigma[i + 1 : :]
-                        if tau in filtration:
-                            filtration[tau] = min(filtration[tau], filtration[sigma])
-                        elif len(tau) > 1:
-                            # If Tau is not empty
-                            xtau, rtauSqr = self._get_circumcenter(X[tau, :])
-                            if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
-                                filtration[tau] = filtration[sigma]
-        for f in filtration:
-            filtration[f] = np.sqrt(filtration[f])
+                        rSqr = self._get_circumcenter(X[sigma, :])[1]
+                        if np.isfinite(rSqr):
+                            filtration[sigma] = rSqr
+                    if sigma in filtration:
+                        for i in range(dim): # Propagate alpha filtration value
+                            tau = sigma[0:i] + sigma[i+1::]
+                            if tau in filtration:
+                                filtration[tau] = min(filtration[tau], filtration[sigma])
+                            elif len(tau) > 1 and sigma in filtration:
+                                # If Tau is not empty
+                                xtau, rtauSqr = self._get_circumcenter(X[tau, :])
+                                if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
+                                    filtration[tau] = filtration[sigma]
+        # Convert from squared radii to radii
+        for sigma in filtration:
+            filtration[sigma] = np.sqrt(filtration[sigma])
 
         ## Step 2: Take care of numerical artifacts that may result
         ## in simplices with greater filtration values than their co-faces
-        for dim in range(maxdim + 2, 2, -1):
-            for sigma in simplices_bydim[dim]:
-                for i in range(dim):
-                    tau = sigma[0:i] + sigma[i + 1 : :]
+        simplices_bydim = [set([]) for i in range(maxdim+2)]
+        for simplex in filtration.keys():
+            simplices_bydim[len(simplex)-1].add(simplex)
+        simplices_bydim = simplices_bydim[2::]
+        simplices_bydim.reverse()
+        for simplices_dim in simplices_bydim:
+            for sigma in simplices_dim:
+                for i in range(len(sigma)):
+                    tau = sigma[0:i] + sigma[i+1::]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
         
@@ -127,6 +133,7 @@ class Alpha(BaseFiltration):
             (SC3) If there are more points than the ambient dimension plus one
             it returns (np.nan, np.nan)
         """
+        X0 = np.array(X)
         if X.shape[0] == 2:
             # Special case of an edge, which is very simple
             dX = X[1, :] - X[0, :]
@@ -142,8 +149,7 @@ class Alpha(BaseFiltration):
         # Transform arrays for PCA for SC1 (points in higher ambient dimension)
         muV = np.array([])
         V = np.array([])
-        if X.shape[0] < X.shape[1] + 1:
-            # SC1: Do PCA down to NPoints-1
+        if X.shape[0] < X.shape[1] + 1: # SC1: Do PCA down to NPoints-1
             muV = np.mean(X, 0)
             XCenter = X - muV
             _, V = linalg.eigh((XCenter.T).dot(XCenter))
@@ -151,19 +157,27 @@ class Alpha(BaseFiltration):
             X = XCenter.dot(V)
         muX = np.mean(X, 0)
         D = np.ones((X.shape[0], X.shape[0] + 1))
-        # Subtract off centroid for numerical stability
-        D[:, 1:-1] = X - muX
+        # Subtract off centroid and scale down for numerical stability
+        Y = X - muX
+        scaleSqr = np.max(np.sum(Y**2, 1))
+        scaleSqr = 1
+        scale = np.sqrt(scaleSqr)
+        Y /=scale
+        
+        D[:, 1:-1] = Y
         D[:, 0] = np.sum(D[:, 1:-1] ** 2, 1)
         minor = lambda A, j: A[
             :, np.concatenate((np.arange(j), np.arange(j + 1, A.shape[1])))
         ]
         dxs = np.array([linalg.det(minor(D, i)) for i in range(1, D.shape[1] - 1)])
         alpha = linalg.det(minor(D, 0))
-        if np.abs(alpha) > 0:
+        if np.abs(alpha) > Alpha.MIN_DET:
             signs = (-1) ** np.arange(len(dxs))
             x = dxs * signs / (2 * alpha) + muX  # Add back centroid
             gamma = ((-1) ** len(dxs)) * linalg.det(minor(D, D.shape[1] - 1))
             rSqr = (np.sum(dxs ** 2) + 4 * alpha * gamma) / (4 * alpha * alpha)
+            x *= scale
+            rSqr *= scaleSqr
             if V.size > 0:
                 # Transform back to ambient if SC1
                 x = x.dot(V.T) + muV
