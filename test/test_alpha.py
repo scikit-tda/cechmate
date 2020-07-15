@@ -35,4 +35,4 @@ def test_precision():
     alpha = Alpha()
     alpha_filtration = alpha.build(X)
     dgms = alpha.diagrams(alpha_filtration)
-    assert(len(dgms) == 4)
+    assert(len(dgms) == 3)
