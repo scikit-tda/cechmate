@@ -62,8 +62,10 @@ def get_boundary(data, v):
         return get_circumsphere(data[v])
 
     c, r2 = get_circumsphere(data[v[:data.shape[1] + 1]])
-    if np.all(np.fabs(np.sum((data[v] - c) ** 2, axis = 1) - r2) < epsilon):
-        return c, r2
+
+    # TODO: epsilon is not defined, so not sure how this ever worked?
+    # if np.all(np.fabs(np.sum((data[v] - c) ** 2, axis = 1) - r2) < epsilon):
+    return c, r2
 
 
 def miniball_cache(data):
