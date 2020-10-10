@@ -45,7 +45,7 @@ setup(name='cechmate',
           'sktda_docs_config'
         ]
       },
-      python_requires='>=3.4',
+      python_requires='>=3.6',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
@@ -55,10 +55,9 @@ setup(name='cechmate',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Mathematics',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
       ],
       keywords='persistent homology, persistence images, persistence diagrams, topology data analysis, algebraic topology, unsupervised learning, filtrations, Cech, Alpha, Rips'
      )
