@@ -5,6 +5,7 @@ from .base import BaseFiltration
 
 __all__ = ["Rips"]
 
+
 class Rips(BaseFiltration):
     """Construct a Rips filtration and the associated diagrams.
 
@@ -48,7 +49,7 @@ class Rips(BaseFiltration):
                     for j in range(i + 1, len(idxs)):
                         d = max(d, D[idxs[i], idxs[j]])
                 simplices.append((idxs, d))
-        
+
         self.simplices_ = simplices
 
         return simplices

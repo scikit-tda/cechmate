@@ -6,6 +6,7 @@ from .base import BaseFiltration
 
 __all__ = ["Custom"]
 
+
 class Custom(BaseFiltration):
     def __init__(self):
         self.simplices_ = None

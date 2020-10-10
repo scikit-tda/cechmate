@@ -1,5 +1,6 @@
 import itertools
 import time
+import warnings
 
 import numpy as np
 from numpy import linalg
@@ -8,6 +9,7 @@ from scipy import spatial
 from .base import BaseFiltration
 
 __all__ = ["Alpha"]
+
 
 class Alpha(BaseFiltration):
     """ Construct an Alpha filtration from the given data.
@@ -25,6 +27,7 @@ class Alpha(BaseFiltration):
         >>> diagrams = r.diagrams(simplices)
 
     """
+
     MIN_DET = 1e-10
 
     def build(self, X):
@@ -52,7 +55,7 @@ class Alpha(BaseFiltration):
             tic = time.time()
 
         delaunay_faces = spatial.Delaunay(X).simplices
-        
+
         if self.verbose:
             print(
                 "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
@@ -72,10 +75,12 @@ class Alpha(BaseFiltration):
                         if np.isfinite(rSqr):
                             filtration[sigma] = rSqr
                     if sigma in filtration:
-                        for i in range(dim): # Propagate alpha filtration value
-                            tau = sigma[0:i] + sigma[i+1::]
+                        for i in range(dim):  # Propagate alpha filtration value
+                            tau = sigma[0:i] + sigma[i + 1 : :]
                             if tau in filtration:
-                                filtration[tau] = min(filtration[tau], filtration[sigma])
+                                filtration[tau] = min(
+                                    filtration[tau], filtration[sigma]
+                                )
                             elif len(tau) > 1 and sigma in filtration:
                                 # If Tau is not empty
                                 xtau, rtauSqr = self._get_circumcenter(X[tau, :])
@@ -87,18 +92,18 @@ class Alpha(BaseFiltration):
 
         ## Step 2: Take care of numerical artifacts that may result
         ## in simplices with greater filtration values than their co-faces
-        simplices_bydim = [set([]) for i in range(maxdim+2)]
+        simplices_bydim = [set([]) for i in range(maxdim + 2)]
         for simplex in filtration.keys():
-            simplices_bydim[len(simplex)-1].add(simplex)
+            simplices_bydim[len(simplex) - 1].add(simplex)
         simplices_bydim = simplices_bydim[2::]
         simplices_bydim.reverse()
         for simplices_dim in simplices_bydim:
             for sigma in simplices_dim:
                 for i in range(len(sigma)):
-                    tau = sigma[0:i] + sigma[i+1::]
+                    tau = sigma[0:i] + sigma[i + 1 : :]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
-        
+
         if self.verbose:
             print(
                 "Finished building alpha filtration (Elapsed Time %.3g)"
@@ -149,7 +154,7 @@ class Alpha(BaseFiltration):
         # Transform arrays for PCA for SC1 (points in higher ambient dimension)
         muV = np.array([])
         V = np.array([])
-        if X.shape[0] < X.shape[1] + 1: # SC1: Do PCA down to NPoints-1
+        if X.shape[0] < X.shape[1] + 1:  # SC1: Do PCA down to NPoints-1
             muV = np.mean(X, 0)
             XCenter = X - muV
             _, V = linalg.eigh((XCenter.T).dot(XCenter))
@@ -159,11 +164,11 @@ class Alpha(BaseFiltration):
         D = np.ones((X.shape[0], X.shape[0] + 1))
         # Subtract off centroid and scale down for numerical stability
         Y = X - muX
-        scaleSqr = np.max(np.sum(Y**2, 1))
+        scaleSqr = np.max(np.sum(Y ** 2, 1))
         scaleSqr = 1
         scale = np.sqrt(scaleSqr)
-        Y /=scale
-        
+        Y /= scale
+
         D[:, 1:-1] = Y
         D[:, 0] = np.sum(D[:, 1:-1] ** 2, 1)
         minor = lambda A, j: A[
