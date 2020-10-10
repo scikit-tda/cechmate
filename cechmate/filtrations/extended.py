@@ -7,6 +7,7 @@ from ..solver import _simplices_to_sparse_pivot_column
 
 __all__ = ["Extended"]
 
+
 class Extended(BaseFiltration):
     """
     This class computed the extended persistence of a simplicial complex. It requires input as a simplicial complex and a mapping on each vertex in the complex. It returns a dictionary storing the associated diagrams in each homology class.
@@ -58,14 +59,14 @@ class Extended(BaseFiltration):
             Array with values for each member (like :code:`color_function`), or dictionary mapping for each node name.
         """
 
-        # Construct simplices from graph    
-        nodes_map = {v:k for k, v in enumerate(graph['nodes'])}
-        simplices = [[nodes_map[s] for s in simplex] for simplex in graph['simplices']]
+        # Construct simplices from graph
+        nodes_map = {v: k for k, v in enumerate(graph["nodes"])}
+        simplices = [[nodes_map[s] for s in simplex] for simplex in graph["simplices"]]
 
         # Construct mapping from f
         if not isinstance(f, dict):
             f = np.array(f)
-            mapping = {v: np.mean(f[graph['nodes'][n]]) for n, v in nodes_map.items()}  
+            mapping = {v: np.mean(f[graph["nodes"][n]]) for n, v in nodes_map.items()}
         else:
             assert len(f) == len(nodes_map), "Each node should have a value in f."
             mapping = {nodes_map[k]: v for k, v in f.items()}
@@ -85,14 +86,19 @@ class Extended(BaseFiltration):
             Dictionary mapping node to value or string corresponding to node attribute that should be used for mapping.
         """
 
-        assert isinstance(f, dict) or isinstance(f, str), "f must be of type dict or str. It is type {}".format(type(f))
+        assert isinstance(f, dict) or isinstance(
+            f, str
+        ), "f must be of type dict or str. It is type {}".format(type(f))
 
         try:
-            import networkx as nx # internal import so that network isn't always required
+            import networkx as nx  # internal import so that network isn't always required
         except ImportError as e:
             import sys
-            raise type(e)(str(e) +
-                      'Networkx package is required for `from_nx` constructor. Please install with `pip install networkx`').with_traceback(sys.exc_info()[2])
+
+            raise type(e)(
+                str(e)
+                + "Networkx package is required for `from_nx` constructor. Please install with `pip install networkx`"
+            ).with_traceback(sys.exc_info()[2])
 
         simplices = list(graph.nodes)
         simplices.extend(list(graph.edges))
@@ -129,34 +135,33 @@ class Extended(BaseFiltration):
 
         """
         n = len(self._boundary_matrix) / 2
-        ordinary_pairs = [(b,d) for (b,d) in pairs if b < n and d < n]
-        extended_pairs = [(b,d) for (b,d) in pairs if b < n and d >= n]
-        relative_pairs = [(b,d) for (b,d) in pairs if b >= n and d >= n]
+        ordinary_pairs = [(b, d) for (b, d) in pairs if b < n and d < n]
+        extended_pairs = [(b, d) for (b, d) in pairs if b < n and d >= n]
+        relative_pairs = [(b, d) for (b, d) in pairs if b >= n and d >= n]
 
         diagrams = {}
         self._extract_diagram(
-            diagrams, 
-            ordinary_pairs, 
-            "ordinary", 
-            lambda b,d: len(self._mapping[b][0]) - 1
+            diagrams,
+            ordinary_pairs,
+            "ordinary",
+            lambda b, d: len(self._mapping[b][0]) - 1,
         )
         self._extract_diagram(
-            diagrams, 
-            extended_pairs, 
-            "extended", 
-            lambda b,d: len(self._mapping[b][0]) - 1
+            diagrams,
+            extended_pairs,
+            "extended",
+            lambda b, d: len(self._mapping[b][0]) - 1,
         )
         self._extract_diagram(
-            diagrams, 
-            relative_pairs, 
-            "relative", 
-            lambda b,d: len(self._mapping[d][0]) - 1
+            diagrams,
+            relative_pairs,
+            "relative",
+            lambda b, d: len(self._mapping[d][0]) - 1,
         )
 
         diagrams = {
-            h: {
-                s:[[b,d] for b,d in ls if b != d] for s, ls in d.items()
-            } for h,d in diagrams.items()
+            h: {s: [[b, d] for b, d in ls if b != d] for s, ls in d.items()}
+            for h, d in diagrams.items()
         }
 
         return diagrams
@@ -164,9 +169,11 @@ class Extended(BaseFiltration):
     def _extract_diagram(self, diagrams, pairs, pairs_str, order_f):
         """Operate on diagrams in place. Add pairs to diagram according to the order_f and self._mapping values.
         """
-        for b,d in pairs:
-            order = order_f(b,d)
-            diagrams.setdefault(order , {}).setdefault(pairs_str, []).append((self._mapping[b][1], self._mapping[d][1]))
+        for b, d in pairs:
+            order = order_f(b, d)
+            diagrams.setdefault(order, {}).setdefault(pairs_str, []).append(
+                (self._mapping[b][1], self._mapping[d][1])
+            )
 
     def _up_down_boundary_matrix(self, X, f):
         """
@@ -180,13 +187,14 @@ class Extended(BaseFiltration):
             boundary matrix: sparse pivot column boundary matrix
             f: mapping of simplices to function values
         """
-        
 
         vs = [x[0] for x in X if len(x) == 1]
         fvs = sorted(vs, key=lambda v: f[v])
 
         lstars = [(_lower_star(X, v, f), f[v]) for v in fvs]
-        kappas = [(kappa, fv) for lstar, fv in lstars for kappa in sorted(lstar, key=len)]
+        kappas = [
+            (kappa, fv) for lstar, fv in lstars for kappa in sorted(lstar, key=len)
+        ]
 
         ustars = [(_upper_star(X, v, f), f[v]) for v in fvs[::-1]]
         lambdas = [(lam, fv) for ustar, fv in ustars for lam in sorted(ustar, key=len)]
@@ -201,18 +209,18 @@ class Extended(BaseFiltration):
         for (k, ds), lam in zip(D, lambdas):
             # find index of lam in A (or kappas)
             idx = kap_sims.index(lam[0])
-            M.append(((k+1), [idx] + [len(A) + d for d in ds]))
-        
+            M.append(((k + 1), [idx] + [len(A) + d for d in ds]))
+
         self._boundary_matrix = M
         self._mapping = dict(enumerate(kappas + lambdas))
-        return self._boundary_matrix, self._mapping 
+        return self._boundary_matrix, self._mapping
 
     def _compute_persistence_pairs(self, boundary_matrix=None):
         boundary_matrix = boundary_matrix or self._boundary_matrix
-        
+
         self._reduced_boundary_matrix = phat.boundary_matrix(
-            columns = boundary_matrix, 
-            representation = phat.representations.sparse_pivot_column
+            columns=boundary_matrix,
+            representation=phat.representations.sparse_pivot_column,
         )
 
         pairs = self._reduced_boundary_matrix.compute_persistence_pairs()
@@ -221,18 +229,18 @@ class Extended(BaseFiltration):
         return self._pairs
 
 
-
-
 def _star(X, v):
     """Compute star of v
     """
     st = [x for x in X if v in x]
     return st
 
+
 def _lower_star(X, v, f):
     st = _star(X, v)
     lst = [x for x in st if max([f[y] for y in x]) == f[v]]
     return lst
+
 
 def _upper_star(X, v, f):
     st = _star(X, v)

@@ -4,10 +4,11 @@
 
 from ..solver import phat_diagrams
 
+
 class BaseFiltration:
     """Base filtration that implements constructor and `diagrams` method.
     """
- 
+
     def __init__(self, maxdim=None, verbose=True):
         """Default constructor
         
@@ -48,4 +49,3 @@ class BaseFiltration:
         self.diagrams_ = phat_diagrams(simplices, show_inf)
 
         return self.diagrams_
-
