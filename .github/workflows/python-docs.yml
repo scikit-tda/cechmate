@@ -3,7 +3,7 @@ name: Update gh-pages docs
 on:
   release:
     types: [created]
-  workflow-dispatch:
+  workflow_dispatch:
 
 jobs:
   deploy:
