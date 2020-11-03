@@ -67,7 +67,7 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
-        filtration = alpha_build(maxdim, X, delaunay_faces)
+        filtration = alpha_build(X, delaunay_faces, maxdim)
 
         if self.verbose:
             print(
@@ -83,8 +83,8 @@ class Alpha(BaseFiltration):
         return simplices
 
 
-@njit
-def alpha_build(X, maxdim, delaunay_faces):
+@nb.jit(nopython=False)
+def alpha_build(X, delaunay_faces, maxdim):
     """
     Do the Alpha filtration of a Euclidean point set (requires scipy)
 
@@ -94,9 +94,8 @@ def alpha_build(X, maxdim, delaunay_faces):
         Array of N Euclidean vectors in d dimensions
     """
     filtration = {}
-    for dim in range(maxdim + 2, 1, -1):
-        for s in range(delaunay_faces.shape[0]):
-            simplex = delaunay_faces[s, :]
+    for dim in np.arange(maxdim + 2, np.int64(1), np.int64(-1)):
+        for simplex in delaunay_faces:
             for sigma in itertools.combinations(simplex, dim):
                 sigma = tuple(sorted(sigma))
                 if not sigma in filtration:
