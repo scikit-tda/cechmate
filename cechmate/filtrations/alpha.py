@@ -104,13 +104,13 @@ def alpha_build(X, delaunay_faces, maxdim):
                         filtration[sigma] = rSqr
                 else:
                     for i in range(dim):  # Propagate alpha filtration value
-                        tau = sigma[0:i] + sigma[i + 1::]
+                        tau = sigma[:i] + sigma[i + 1:]
                         if tau in filtration:
                             filtration[tau] = min(
                                 filtration[tau], filtration[sigma]
                             )
                         elif len(tau) > 1:
-                            # If Tau is not empty
+                            # If tau has non-empty circumsphere
                             xtau, rtauSqr = _get_circumcenter(X[tau, :])
                             if np.sum((X[sigma[i],
                                        :] - xtau) ** 2) < rtauSqr:
@@ -121,15 +121,15 @@ def alpha_build(X, delaunay_faces, maxdim):
 
     ## Step 2: Take care of numerical artifacts that may result
     ## in simplices with greater filtration values than their co-faces
-    simplices_bydim = [set([]) for i in range(maxdim + 2)]
+    simplices_bydim = [set([]) for _ in range(maxdim + 2)]
     for simplex in filtration.keys():
         simplices_bydim[len(simplex) - 1].add(simplex)
-    simplices_bydim = simplices_bydim[2::]
+    simplices_bydim = simplices_bydim[2:]
     simplices_bydim.reverse()
     for simplices_dim in simplices_bydim:
         for sigma in simplices_dim:
             for i in range(len(sigma)):
-                tau = sigma[0:i] + sigma[i + 1::]
+                tau = sigma[:i] + sigma[i + 1:]
                 if filtration[tau] > filtration[sigma]:
                     filtration[tau] = filtration[sigma]
 
