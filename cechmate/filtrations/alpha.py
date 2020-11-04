@@ -98,19 +98,18 @@ def alpha_build(X, delaunay_faces, maxdim):
         for simplex in delaunay_faces:
             for sigma in itertools.combinations(simplex, dim):
                 sigma = tuple(sorted(sigma))
-                if not sigma in filtration:
+                if sigma not in filtration:
                     rSqr = _get_circumcenter(X[sigma, :])[1]
                     if np.isfinite(rSqr):
                         filtration[sigma] = rSqr
                 if sigma in filtration:
-                    for i in range(
-                            dim):  # Propagate alpha filtration value
+                    for i in range(dim):  # Propagate alpha filtration value
                         tau = sigma[0:i] + sigma[i + 1::]
                         if tau in filtration:
-                            filtration[tau] = min(
+                            filtration[tau] = np.min(
                                 filtration[tau], filtration[sigma]
                             )
-                        elif len(tau) > 1 and sigma in filtration:
+                        elif len(tau) > 1:
                             # If Tau is not empty
                             xtau, rtauSqr = _get_circumcenter(X[tau, :])
                             if np.sum((X[sigma[i],
