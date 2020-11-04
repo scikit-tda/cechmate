@@ -102,19 +102,32 @@ def alpha_build(X, delaunay_faces, maxdim):
                     rSqr = _get_circumcenter(X[sigma, :])[1]
                     if np.isfinite(rSqr):
                         filtration[sigma] = rSqr
-                else:
-                    for i in range(dim):  # Propagate alpha filtration value
-                        tau = sigma[:i] + sigma[i + 1:]
-                        if tau in filtration:
-                            filtration[tau] = min(
-                                filtration[tau], filtration[sigma]
-                            )
-                        elif len(tau) > 1:
-                            # If tau has non-empty circumsphere
-                            xtau, rtauSqr = _get_circumcenter(X[tau, :])
-                            if np.sum((X[sigma[i],
-                                       :] - xtau) ** 2) < rtauSqr:
-                                filtration[tau] = filtration[sigma]
+                for i in range(dim):  # Propagate alpha filtration value
+                    tau = sigma[:i] + sigma[i + 1:]
+                    if tau in filtration:
+                        filtration[tau] = min(filtration[tau],
+                                              filtration[sigma])
+                    elif len(tau) > 1:
+                        xtau, rtauSqr = _get_circumcenter(X[tau, :])
+                        # # not_gabriel_global = np.setdiff1d(
+                        # #     np.flatnonzero(np.sum((X - xtau) ** 2,
+                        # #                           axis=1) < rtauSqr),
+                        # #     tau,
+                        # #     assume_unique=True
+                        # #     ).size
+                        # not_gabriel_global = np.sum((X - xtau) ** 2,
+                        #                             axis=1) < rtauSqr
+                        # not_gabriel_global[tau, ...] = np.bool_(False)
+                        # not_gabriel_global = np.any(not_gabriel_global)
+                        # # If tau has empty circumsphere there is no need to
+                        # # compute its circumcenter again
+                        # if not not_gabriel_global and np.isfinite(rtauSqr):
+                        #     filtration[tau] = rtauSqr
+                        # else:
+                        #     filtration[tau] = filtration[sigma]
+                        if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
+                            filtration[tau] = filtration[sigma]
+
     # Convert from squared radii to radii
     for sigma in filtration:
         filtration[sigma] = np.sqrt(filtration[sigma])
@@ -160,9 +173,9 @@ def _get_circumcenter(X):
     """
     if X.shape[0] == 2:
         # Special case of an edge, which is very simple
-        dX = X[1, :] - X[0, :]
+        dX = X[1] - X[0]
         rSqr = 0.25 * np.sum(dX ** 2)
-        x = X[0, :] + 0.5 * dX
+        x = X[0] + 0.5 * dX
         return x, rSqr
     # if X.shape[0] > X.shape[1] + 1:  # SC3 (too many points)
     #     warnings.warn(
