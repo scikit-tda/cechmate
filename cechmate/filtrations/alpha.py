@@ -106,7 +106,7 @@ def alpha_build(X, delaunay_faces, maxdim):
                     for i in range(dim):  # Propagate alpha filtration value
                         tau = sigma[0:i] + sigma[i + 1::]
                         if tau in filtration:
-                            filtration[tau] = np.min(
+                            filtration[tau] = min(
                                 filtration[tau], filtration[sigma]
                             )
                         elif len(tau) > 1:
