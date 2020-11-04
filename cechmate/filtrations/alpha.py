@@ -163,7 +163,7 @@ def _get_circumcenter(X):
         dX = X[1, :] - X[0, :]
         rSqr = 0.25 * np.sum(dX ** 2)
         x = X[0, :] + 0.5 * dX
-        return (x, rSqr)
+        return x, rSqr
     # if X.shape[0] > X.shape[1] + 1:  # SC3 (too many points)
     #     warnings.warn(
     #         "Trying to compute circumsphere for "
@@ -175,10 +175,9 @@ def _get_circumcenter(X):
     if flag:  # SC1: Do PCA down to NPoints-1
         muV = nb_mean_axis_0(X)
         XCenter = X - muV
-        _, V = linalg.eigh(XCenter.T.dot(XCenter))
-        V = V[:,
-            (X.shape[1] - X.shape[0] + 1)::]  # Put dimension NPoints-1
-        X = XCenter.dot(V)
+        _, V = linalg.eigh(XCenter.T @ XCenter)
+        V = np.ascontiguousarray(V[:, (X.shape[1] - X.shape[0] + 1):])  # Put dimension NPoints - 1
+        X = XCenter @ V
     muX = nb_mean_axis_0(X)
     D = np.ones((X.shape[0], X.shape[0] + 1))
     # Subtract off centroid and scale down for numerical stability
@@ -190,10 +189,8 @@ def _get_circumcenter(X):
 
     D[:, 1:-1] = Y
     D[:, 0] = np.sum(D[:, 1:-1] ** 2, 1)
-    minor = lambda A, j: A[
-                         :, np.concatenate(
-        (np.arange(j), np.arange(j + 1, A.shape[1])))
-                         ]
+    minor = lambda A, j: \
+        A[:, np.concatenate((np.arange(j), np.arange(j + 1, A.shape[1])))]
     dxs = np.array(
         [linalg.det(minor(D, i)) for i in range(1, D.shape[1] - 1)])
     alpha = linalg.det(minor(D, 0))
@@ -206,9 +203,9 @@ def _get_circumcenter(X):
         rSqr *= scaleSqr
         if flag:
             # Transform back to ambient if SC1
-            x = x.dot(V.T) + muV
-        return (x, rSqr)
-    return (np.empty(X.shape[1]), np.inf)  # SC2 (Points not in general position)
+            x = x @ np.ascontiguousarray(V.T) + muV
+        return x, rSqr
+    return np.empty(X.shape[1]), np.inf  # SC2 (Points not in general position)
 
 
 @nb.njit
