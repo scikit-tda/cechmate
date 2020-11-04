@@ -102,7 +102,7 @@ def alpha_build(X, delaunay_faces, maxdim):
                     rSqr = _get_circumcenter(X[sigma, :])[1]
                     if np.isfinite(rSqr):
                         filtration[sigma] = rSqr
-                if sigma in filtration:
+                else:
                     for i in range(dim):  # Propagate alpha filtration value
                         tau = sigma[0:i] + sigma[i + 1::]
                         if tau in filtration:
