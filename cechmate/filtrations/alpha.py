@@ -92,7 +92,7 @@ def alpha_build(X, delaunay_faces):
     ambient_dim = delaunay_faces.shape[1] - 1
 
     # Special iteration for highest order simplices
-    highest_simplices_vals = _parallel_highest(n_simplices, delaunay_faces, X)
+    highest_simplices_vals = _highest(n_simplices, delaunay_faces, X)
     delaunay_faces = [tuple(simplex) for simplex in delaunay_faces]
     filtration = {delaunay_faces[n]: [highest_simplices_vals[n], True]
                   for n in range(n_simplices)}
