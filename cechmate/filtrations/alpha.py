@@ -70,7 +70,7 @@ class Alpha(BaseFiltration):
                 % (time.time() - tic)
             )
 
-        simplices = [([i], 0) for i in range(X.shape[0])]
+        simplices = [((i,), 0) for i in range(X.shape[0])]
         simplices.extend(filtration.items())
 
         self.simplices_ = simplices
@@ -133,8 +133,7 @@ def alpha_build(X, delaunay_faces):
                     filtration[sigma][1] = True
 
     # Convert from squared radii to radii
-    for sigma in filtration:
-        filtration[sigma] = np.sqrt(filtration[sigma][0])
+    filtration = {sigma: np.sqrt(filtration[sigma][0]) for sigma in filtration}
 
     ## Step 2: Take care of numerical artifacts that may result
     ## in simplices with greater filtration values than their co-faces
