@@ -104,7 +104,7 @@ def alpha_build(X, delaunay_faces):
                                    False]
             else:
                 x, r_sq = _get_circumcircle(X[tau, :])
-                if np.sum((X[i] - x) ** 2) < r_sq:
+                if np.sum((X[simplex[i]] - x) ** 2) < r_sq:
                     filtration[tau] = [filtration[simplex][0], False]
 
     for n_vertices in range(ambient_dim, 1, -1):
@@ -127,7 +127,7 @@ def alpha_build(X, delaunay_faces):
                                                False]
                         else:
                             x, r_sq = _get_circumcircle(X[tau, :])
-                            if np.sum((X[i] - x) ** 2) < r_sq:
+                            if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
                                 filtration[tau] = [filtration[sigma][0],
                                                    False]
                     filtration[sigma][1] = True
