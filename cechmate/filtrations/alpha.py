@@ -107,7 +107,7 @@ def alpha_build(X, delaunay_faces):
                 if np.sum((X[simplex[i]] - x) ** 2) < r_sq:
                     filtration[tau] = [filtration[simplex][0], False]
 
-    for n_vertices in range(ambient_dim, 1, -1):
+    for n_vertices in range(ambient_dim, 2, -1):
         index_combs = list(itertools.combinations(range(ambient_dim + 1),
                                                   n_vertices))
         for simplex in delaunay_faces:
@@ -131,6 +131,14 @@ def alpha_build(X, delaunay_faces):
                                 filtration[tau] = [filtration[sigma][0],
                                                    False]
                     filtration[sigma][1] = True
+
+    index_combs = list(itertools.combinations(range(ambient_dim + 1), 2))
+    for simplex in delaunay_faces:
+        for idxs in index_combs:
+            sigma = tuple([simplex[i] for i in idxs])
+            if sigma not in filtration:
+                filtration[sigma] = \
+                    [_get_squared_circumradius(X[sigma, :]), True]
 
     # Convert from squared radii to radii
     filtration = {sigma: np.sqrt(filtration[sigma][0]) for sigma in filtration}
