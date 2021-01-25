@@ -78,7 +78,6 @@ class Alpha(BaseFiltration):
         return simplices
 
 
-# @jit(nopython=False)
 def alpha_build(X, delaunay_faces):
     """
     Do the Alpha filtration of a Euclidean point set (requires scipy)
