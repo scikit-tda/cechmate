@@ -8,8 +8,6 @@ from scipy import spatial
 
 from .base import BaseFiltration
 
-import numba as nb
-
 __all__ = ["Alpha"]
 
 
@@ -48,16 +46,13 @@ class Alpha(BaseFiltration):
                 "The input point cloud has more columns than rows; "
                 + "did you mean to transpose?"
             )
-        maxdim = self.maxdim
-        if not self.maxdim:
-            maxdim = X.shape[1] - 1
 
         ## Step 1: Figure out the filtration
         if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
-        delaunay_faces = spatial.Delaunay(X).simplices
+        delaunay_faces = np.sort(spatial.Delaunay(X).simplices, axis=1)
 
         if self.verbose:
             print(
@@ -67,7 +62,7 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
-        filtration = alpha_build(X, delaunay_faces, maxdim)
+        filtration = alpha_build(X, delaunay_faces)
 
         if self.verbose:
             print(
@@ -83,8 +78,8 @@ class Alpha(BaseFiltration):
         return simplices
 
 
-@nb.jit(nopython=False)
-def alpha_build(X, delaunay_faces, maxdim):
+# @jit(nopython=False)
+def alpha_build(X, delaunay_faces):
     """
     Do the Alpha filtration of a Euclidean point set (requires scipy)
 
@@ -93,48 +88,58 @@ def alpha_build(X, delaunay_faces, maxdim):
     X: Nxd array
         Array of N Euclidean vectors in d dimensions
     """
-    filtration = {}
-    for dim in np.arange(maxdim + 2, np.int64(1), np.int64(-1)):
+    n_simplices = delaunay_faces.shape[0]
+    ambient_dim = delaunay_faces.shape[1] - 1
+
+    # Special iteration for highest order simplices
+    highest_simplices_vals = _parallel_highest(n_simplices, delaunay_faces, X)
+    delaunay_faces = [tuple(simplex) for simplex in delaunay_faces]
+    filtration = {delaunay_faces[n]: [highest_simplices_vals[n], True]
+                  for n in range(n_simplices)}
+    for simplex in delaunay_faces:
+        for i in range(ambient_dim + 1):
+            tau = simplex[:i] + simplex[i + 1:]
+            if tau in filtration:
+                filtration[tau] = [min(filtration[tau][0],
+                                       filtration[simplex][0]),
+                                   False]
+            else:
+                x, r_sq = _get_circumcircle(X[tau, :])
+                if np.sum((X[i] - x) ** 2) < r_sq:
+                    filtration[tau] = [filtration[simplex][0], False]
+
+    for n_vertices in range(ambient_dim, 1, -1):
+        index_combs = list(itertools.combinations(range(ambient_dim + 1),
+                                                  n_vertices))
         for simplex in delaunay_faces:
-            for sigma in itertools.combinations(simplex, dim):
-                sigma = tuple(sorted(sigma))
+            for idxs in index_combs:
+                sigma = tuple([simplex[i] for i in idxs])
                 if sigma not in filtration:
-                    rSqr = _get_circumcenter(X[sigma, :])[1]
-                    if np.isfinite(rSqr):
-                        filtration[sigma] = rSqr
-                for i in range(dim):  # Propagate alpha filtration value
-                    tau = sigma[:i] + sigma[i + 1:]
-                    if tau in filtration:
-                        filtration[tau] = min(filtration[tau],
-                                              filtration[sigma])
-                    elif len(tau) > 1:
-                        xtau, rtauSqr = _get_circumcenter(X[tau, :])
-                        # # not_gabriel_global = np.setdiff1d(
-                        # #     np.flatnonzero(np.sum((X - xtau) ** 2,
-                        # #                           axis=1) < rtauSqr),
-                        # #     tau,
-                        # #     assume_unique=True
-                        # #     ).size
-                        # not_gabriel_global = np.sum((X - xtau) ** 2,
-                        #                             axis=1) < rtauSqr
-                        # not_gabriel_global[tau, ...] = np.bool_(False)
-                        # not_gabriel_global = np.any(not_gabriel_global)
-                        # # If tau has empty circumsphere there is no need to
-                        # # compute its circumcenter again
-                        # if not not_gabriel_global and np.isfinite(rtauSqr):
-                        #     filtration[tau] = rtauSqr
-                        # else:
-                        #     filtration[tau] = filtration[sigma]
-                        if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
-                            filtration[tau] = filtration[sigma]
+                    filtration[sigma] = \
+                        [_get_squared_circumradius(X[sigma, :]), False]
+                elif filtration[sigma][1]:
+                    continue
+                if not filtration[sigma][1]:
+                    for i in range(n_vertices):
+                        tau = sigma[:i] + sigma[i + 1:]
+                        if tau in filtration:
+                            filtration[tau] = [min(filtration[tau][0],
+                                                   filtration[sigma][0]),
+                                               False]
+                        else:
+                            x, r_sq = _get_circumcircle(X[tau, :])
+                            if np.sum((X[i] - x) ** 2) < r_sq:
+                                filtration[tau] = [filtration[sigma][0],
+                                                   False]
+                    filtration[sigma][1] = True
 
     # Convert from squared radii to radii
     for sigma in filtration:
-        filtration[sigma] = np.sqrt(filtration[sigma])
+        filtration[sigma] = np.sqrt(filtration[sigma][0])
 
     ## Step 2: Take care of numerical artifacts that may result
     ## in simplices with greater filtration values than their co-faces
-    simplices_bydim = [set([]) for _ in range(maxdim + 2)]
+    simplices_bydim = [set([]) for _ in range(ambient_dim + 2)]
     for simplex in filtration.keys():
         simplices_bydim[len(simplex) - 1].add(simplex)
     simplices_bydim = simplices_bydim[2:]
@@ -149,8 +154,14 @@ def alpha_build(X, delaunay_faces, maxdim):
     return filtration
 
 
-@nb.njit
-def _get_circumcenter(X):
+def _highest(n_simplices, delaunay_faces, X):
+    values = np.zeros(n_simplices, dtype=np.float_)
+    for n in range(n_simplices):
+        values[n] = _get_squared_circumradius(X[delaunay_faces[n]])
+    return values
+
+
+def _get_squared_circumradius(X):
     """
     Compute the circumcenter and circumradius of a simplex
 
@@ -174,84 +185,56 @@ def _get_circumcenter(X):
     if X.shape[0] == 2:
         # Special case of an edge, which is very simple
         dX = X[1] - X[0]
-        rSqr = 0.25 * np.sum(dX ** 2)
-        x = X[0] + 0.5 * dX
-        return x, rSqr
-    # if X.shape[0] > X.shape[1] + 1:  # SC3 (too many points)
-    #     warnings.warn(
-    #         "Trying to compute circumsphere for "
-    #         + "%i points in %i dimensions" % (X.shape[0], X.shape[1])
-    #     )
-    #     return (np.nan, np.nan)
-    # Transform arrays for PCA for SC1 (points in higher ambient dimension)
-    flag = X.shape[0] < X.shape[1] + 1
-    if flag:  # SC1: Do PCA down to NPoints-1
-        muV = nb_mean_axis_0(X)
-        XCenter = X - muV
-        _, V = linalg.eigh(XCenter.T @ XCenter)
-        V = np.ascontiguousarray(V[:, (X.shape[1] - X.shape[0] + 1):])  # Put dimension NPoints - 1
-        X = XCenter @ V
-    muX = nb_mean_axis_0(X)
-    D = np.ones((X.shape[0], X.shape[0] + 1))
-    # Subtract off centroid and scale down for numerical stability
-    Y = X - muX
-    # scaleSqr = np.max(np.sum(Y ** 2, 1))
-    scaleSqr = 1
-    scale = np.sqrt(scaleSqr)
-    Y /= scale
+        r_sq = 0.25 * np.sum(dX ** 2)
 
-    D[:, 1:-1] = Y
-    D[:, 0] = np.sum(D[:, 1:-1] ** 2, 1)
-    minor = lambda A, j: \
-        A[:, np.concatenate((np.arange(j), np.arange(j + 1, A.shape[1])))]
-    dxs = np.array(
-        [linalg.det(minor(D, i)) for i in range(1, D.shape[1] - 1)])
-    alpha = linalg.det(minor(D, 0))
-    if np.abs(alpha) > MIN_DET:
-        signs = (-1) ** np.arange(len(dxs))
-        x = dxs * signs / (2 * alpha) + muX  # Add back centroid
-        gamma = ((-1) ** len(dxs)) * linalg.det(minor(D, D.shape[1] - 1))
-        rSqr = (np.sum(dxs ** 2) + 4 * alpha * gamma) / (4 * alpha * alpha)
-        x *= scale
-        rSqr *= scaleSqr
-        if flag:
-            # Transform back to ambient if SC1
-            x = x @ np.ascontiguousarray(V.T) + muV
-        return x, rSqr
-    return np.empty(X.shape[1]), np.inf  # SC2 (Points not in general position)
-
-
-@nb.njit
-def apply_along_axis_0(func1d, arr):
-    """Like calling func1d(arr, axis=0)"""
-    if arr.size == 0:
-        raise RuntimeError("Must have arr.size > 0")
-    ndim = arr.ndim
-    if ndim == 0:
-        raise RuntimeError("Must have ndim > 0")
-    elif 1 == ndim:
-        return func1d(arr)
     else:
-        result_shape = arr.shape[1:]
-        out = np.empty(result_shape, arr.dtype)
-        _apply_along_axis_0(func1d, arr, out)
-        return out
+        cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
+        cayleigh_menger[0, 0] = 0
+        cayleigh_menger[1:, 1:] = spatial.distance.squareform(
+            spatial.distance.pdist(X, metric="sqeuclidean")
+            )
+        bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
+        r_sq = 0.25 * bar_coords[0, 0]
+
+    return r_sq
 
 
-@nb.njit
-def _apply_along_axis_0(func1d, arr, out):
-    """Like calling func1d(arr, axis=0, out=out). Require arr to be 2d or bigger."""
-    ndim = arr.ndim
-    if ndim < 2:
-        raise RuntimeError("_apply_along_axis_0 requires 2d array or bigger")
-    elif ndim == 2:  # 2-dimensional case
-        for i in range(len(out)):
-            out[i] = func1d(arr[:, i])
-    else:  # higher dimensional case
-        for i, out_slice in enumerate(out):
-            _apply_along_axis_0(func1d, arr[:, i], out_slice)
+def _get_circumcircle(X):
+    """
+    Compute the circumcenter and circumradius of a simplex
 
+    Parameters
+    ----------
+    X : ndarray (N, d)
+        Coordinates of points on an N-simplex in d dimensions
 
-@nb.njit
-def nb_mean_axis_0(arr):
-    return apply_along_axis_0(np.mean, arr)
+    Returns
+    -------
+    (circumcenter, circumradius)
+        A tuple of the circumcenter and squared circumradius.
+        (SC1) If there are fewer points than the ambient dimension plus one,
+        then return the circumcenter corresponding to the smallest
+        possible squared circumradius
+        (SC2) If the points are not in general position,
+        it returns (np.inf, np.inf)
+        (SC3) If there are more points than the ambient dimension plus one
+        it returns (np.nan, np.nan)
+    """
+    if X.shape[0] == 2:
+        # Special case of an edge, which is very simple
+        dX = X[1] - X[0]
+        r_sq = 0.25 * np.sum(dX ** 2)
+        x = X[0] + 0.5 * dX
+
+    else:
+        cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
+        cayleigh_menger[0, 0] = 0
+        cayleigh_menger[1:, 1:] = spatial.distance.squareform(
+            spatial.distance.pdist(X, metric="sqeuclidean")
+            )
+        bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
+        r_sq = 0.25 * bar_coords[0, 0]
+        x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
+                   axis=1)
+
+    return x, r_sq
