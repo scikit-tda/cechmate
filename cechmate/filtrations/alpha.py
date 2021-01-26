@@ -62,7 +62,7 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
-        filtration = alpha_build(X, delaunay_faces)
+        self.simplices_ = alpha_build(X, delaunay_faces)
 
         if self.verbose:
             print(
@@ -70,12 +70,7 @@ class Alpha(BaseFiltration):
                 % (time.time() - tic)
             )
 
-        simplices = [((i,), 0) for i in range(X.shape[0])]
-        simplices.extend(filtration.items())
-
-        self.simplices_ = simplices
-
-        return simplices
+        return self.simplices_
 
 
 def alpha_build(X, delaunay_faces):
@@ -87,87 +82,68 @@ def alpha_build(X, delaunay_faces):
     X: Nxd array
         Array of N Euclidean vectors in d dimensions
     """
-    n_simplices = delaunay_faces.shape[0]
-    ambient_dim = delaunay_faces.shape[1] - 1
-
-    # Special iteration for highest order simplices
-    highest_simplices_vals = _highest(n_simplices, delaunay_faces, X)
+    D = delaunay_faces.shape[1] - 1  # Top dimension
     delaunay_faces = [tuple(simplex) for simplex in delaunay_faces]
-    filtration = {delaunay_faces[n]: [highest_simplices_vals[n], True]
-                  for n in range(n_simplices)}
-    for simplex in delaunay_faces:
-        for i in range(ambient_dim + 1):
-            tau = simplex[:i] + simplex[i + 1:]
-            if tau in filtration:
-                filtration[tau] = [min(filtration[tau][0],
-                                       filtration[simplex][0]),
-                                   False]
+    filtration = {dim: {} for dim in range(D, 0, -1)}
+
+    # Special iteration for highest dimensional simplices
+    for sigma in delaunay_faces:
+        filtration[D][sigma] = _squared_circumradius(X[sigma, :])
+        for i in range(D + 1):
+            tau = sigma[:i] + sigma[i + 1:]
+            if tau in filtration[D - 1] and \
+                    not np.isnan(filtration[D - 1][tau]):
+                filtration[D - 1][tau] = \
+                    min(filtration[D - 1][tau], filtration[D][sigma])
             else:
-                x, r_sq = _get_circumcircle(X[tau, :])
-                if np.sum((X[simplex[i]] - x) ** 2) < r_sq:
-                    filtration[tau] = [filtration[simplex][0], False]
+                x, r_sq = _circumcircle(X[tau, :])
+                if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
+                    filtration[D - 1][tau] = filtration[D][sigma]
+                else:
+                    filtration[D - 1][tau] = np.nan
 
-    for n_vertices in range(ambient_dim, 2, -1):
-        index_combs = list(itertools.combinations(range(ambient_dim + 1),
-                                                  n_vertices))
-        for simplex in delaunay_faces:
-            for idxs in index_combs:
-                sigma = tuple([simplex[i] for i in idxs])
-                if sigma not in filtration:
-                    filtration[sigma] = \
-                        [_get_squared_circumradius(X[sigma, :]), False]
-                elif filtration[sigma][1]:
-                    continue
-                if not filtration[sigma][1]:
-                    for i in range(n_vertices):
-                        tau = sigma[:i] + sigma[i + 1:]
-                        if tau in filtration:
-                            filtration[tau] = [min(filtration[tau][0],
-                                                   filtration[sigma][0]),
-                                               False]
-                        else:
-                            x, r_sq = _get_circumcircle(X[tau, :])
-                            if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
-                                filtration[tau] = [filtration[sigma][0],
-                                                   False]
-                    filtration[sigma][1] = True
-
-    index_combs = list(itertools.combinations(range(ambient_dim + 1), 2))
-    for simplex in delaunay_faces:
-        for idxs in index_combs:
-            sigma = tuple([simplex[i] for i in idxs])
-            if sigma not in filtration:
-                filtration[sigma] = \
-                    [_get_squared_circumradius(X[sigma, :]), True]
-
-    # Convert from squared radii to radii
-    filtration = {sigma: np.sqrt(filtration[sigma][0]) for sigma in filtration}
-
-    ## Step 2: Take care of numerical artifacts that may result
-    ## in simplices with greater filtration values than their co-faces
-    simplices_bydim = [set([]) for _ in range(ambient_dim + 2)]
-    for simplex in filtration.keys():
-        simplices_bydim[len(simplex) - 1].add(simplex)
-    simplices_bydim = simplices_bydim[2:]
-    simplices_bydim.reverse()
-    for simplices_dim in simplices_bydim:
-        for sigma in simplices_dim:
-            for i in range(len(sigma)):
+    for dim in range(D - 1, 1, -1):
+        for sigma in filtration[dim]:
+            if np.isnan(filtration[dim][sigma]):
+                filtration[dim][sigma] = _squared_circumradius(X[sigma, :])
+            for i in range(dim + 1):
                 tau = sigma[:i] + sigma[i + 1:]
-                if filtration[tau] > filtration[sigma]:
-                    filtration[tau] = filtration[sigma]
+                if tau in filtration[dim - 1] and \
+                        not np.isnan(filtration[dim - 1][tau]):
+                    filtration[dim - 1][tau] = \
+                        min(filtration[dim - 1][tau], filtration[dim][sigma])
+                else:
+                    x, r_sq = _circumcircle(X[tau, :])
+                    if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
+                        filtration[dim - 1][tau] = filtration[dim][sigma]
+                    else:
+                        filtration[dim - 1][tau] = np.nan
 
-    return filtration
+    # Special iteration for dimension one simplices
+    for sigma in filtration[1]:
+        if np.isnan(filtration[1][sigma]):
+            filtration[1][sigma] = _squared_circumradius(X[sigma, :])
+
+    # Take care of numerical artifacts that may result in simplices with
+    # greater filtration values than their co-faces
+    for dim in range(D, 1, -1):
+        for sigma in filtration[dim]:
+            for i in range(dim + 1):
+                tau = sigma[:i] + sigma[i + 1:]
+                if filtration[dim - 1][tau] > filtration[dim][sigma]:
+                    filtration[dim - 1][tau] = filtration[dim][sigma]
+
+    # Convert from squared radii to radii and return list of simplices
+    simplices = [((i,), 0) for i in range(X.shape[0])]
+    simplices += [
+        (sigma, np.sqrt(filtration[dim][sigma]))
+        for dim in range(1, D + 1) for sigma in filtration[dim]
+        ]
+
+    return simplices
 
 
-def _highest(n_simplices, delaunay_faces, X):
-    values = np.zeros(n_simplices, dtype=np.float_)
-    for n in range(n_simplices):
-        values[n] = _get_squared_circumradius(X[delaunay_faces[n]])
-    return values
-
-
-def _get_squared_circumradius(X):
+def _squared_circumradius(X):
     """
     Compute the circumcenter and circumradius of a simplex
 
@@ -205,7 +181,7 @@ def _get_squared_circumradius(X):
     return r_sq
 
 
-def _get_circumcircle(X):
+def _circumcircle(X):
     """
     Compute the circumcenter and circumradius of a simplex
 
