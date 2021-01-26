@@ -172,9 +172,11 @@ def _squared_circumradius(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = spatial.distance.squareform(
-            spatial.distance.pdist(X, metric="sqeuclidean")
-            )
+        # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
+        #     spatial.distance.pdist(X, metric="sqeuclidean")
+        #     )
+        cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
+                                                         metric="sqeuclidean")
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
 
@@ -211,9 +213,11 @@ def _circumcircle(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = spatial.distance.squareform(
-            spatial.distance.pdist(X, metric="sqeuclidean")
-            )
+        # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
+        #     spatial.distance.pdist(X, metric="sqeuclidean")
+        #     )
+        cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
+                                                         metric="sqeuclidean")
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
         x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
