@@ -51,6 +51,7 @@ class Alpha(BaseFiltration):
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
+        X = X.astype(np.float_)
         delaunay_faces = np.sort(spatial.Delaunay(X).simplices, axis=1)
 
         if self.verbose:
