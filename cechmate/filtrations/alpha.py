@@ -242,7 +242,7 @@ def _pdist(A):
 
     for i in range(A.shape[0]):
         for j in range(A.shape[0]):
-            dist[i, j] = -2.
+            dist[i, j] *= -2.
             dist[i, j] += TMP[i] + TMP[j]
 
     return dist
