@@ -1,12 +1,10 @@
 import itertools
+import numpy as np
 import time
 import warnings
-
-import numpy as np
+from numba import njit
 from numpy import linalg
 from scipy import spatial
-
-from numba import njit
 
 from .base import BaseFiltration
 
@@ -179,7 +177,7 @@ def _squared_circumradius(X):
         #     )
         # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
         #                                                  metric="sqeuclidean")
-        cayleigh_menger[1:, 1:] = calc_dist(X, X)
+        cayleigh_menger[1:, 1:] = _pdist(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
 
@@ -222,7 +220,7 @@ def _circumcircle(X):
         #     )
         # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
         #                                                  metric="sqeuclidean")
-        cayleigh_menger[1:, 1:] = calc_dist(X, X)
+        cayleigh_menger[1:, 1:] = _pdist(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
         x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
@@ -232,25 +230,19 @@ def _circumcircle(X):
 
 
 @njit
-def calc_dist(A, B):
-    dist = np.dot(A, B.T)
+def _pdist(A):
+    dist = np.dot(A, A.T)
 
-    TMP_A = np.empty(A.shape[0], dtype=A.dtype)
+    TMP = np.empty(A.shape[0], dtype=A.dtype)
     for i in range(A.shape[0]):
         sum = 0.
         for j in range(A.shape[1]):
             sum += A[i, j]**2
-        TMP_A[i] = sum
-
-    TMP_B = np.empty(B.shape[0], dtype=A.dtype)
-    for i in range(B.shape[0]):
-        sum = 0.
-        for j in range(B.shape[1]):
-            sum += B[i, j]**2
-        TMP_B[i] = sum
+        TMP[i] = sum
 
     for i in range(A.shape[0]):
-        for j in range(B.shape[0]):
-            dist[i, j] = -2. * dist[i, j] + TMP_A[i] + TMP_B[j]
+        for j in range(A.shape[0]):
+            dist[i, j] = -2.
+            dist[i, j] += TMP[i] + TMP[j]
 
     return dist
