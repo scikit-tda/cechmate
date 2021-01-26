@@ -6,6 +6,8 @@ import numpy as np
 from numpy import linalg
 from scipy import spatial
 
+from numba import njit
+
 from .base import BaseFiltration
 
 __all__ = ["Alpha"]
@@ -47,7 +49,6 @@ class Alpha(BaseFiltration):
                 + "did you mean to transpose?"
             )
 
-        ## Step 1: Figure out the filtration
         if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
@@ -143,6 +144,7 @@ def alpha_build(X, delaunay_faces):
     return simplices
 
 
+@njit
 def _squared_circumradius(X):
     """
     Compute the circumcenter and circumradius of a simplex
@@ -175,14 +177,16 @@ def _squared_circumradius(X):
         # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
         #     spatial.distance.pdist(X, metric="sqeuclidean")
         #     )
-        cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
-                                                         metric="sqeuclidean")
+        # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
+        #                                                  metric="sqeuclidean")
+        cayleigh_menger[1:, 1:] = calc_dist(X, X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
 
     return r_sq
 
 
+@njit
 def _circumcircle(X):
     """
     Compute the circumcenter and circumradius of a simplex
@@ -216,11 +220,37 @@ def _circumcircle(X):
         # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
         #     spatial.distance.pdist(X, metric="sqeuclidean")
         #     )
-        cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
-                                                         metric="sqeuclidean")
+        # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
+        #                                                  metric="sqeuclidean")
+        cayleigh_menger[1:, 1:] = calc_dist(X, X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
         x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
                    axis=1)
 
     return x, r_sq
+
+
+@njit
+def calc_dist(A, B):
+    dist = np.dot(A, B.T)
+
+    TMP_A = np.empty(A.shape[0], dtype=A.dtype)
+    for i in range(A.shape[0]):
+        sum = 0.
+        for j in range(A.shape[1]):
+            sum += A[i, j]**2
+        TMP_A[i] = sum
+
+    TMP_B = np.empty(B.shape[0], dtype=A.dtype)
+    for i in range(B.shape[0]):
+        sum = 0.
+        for j in range(B.shape[1]):
+            sum += B[i, j]**2
+        TMP_B[i] = sum
+
+    for i in range(A.shape[0]):
+        for j in range(B.shape[0]):
+            dist[i, j] = -2. * dist[i, j] + TMP_A[i] + TMP_B[j]
+
+    return dist
