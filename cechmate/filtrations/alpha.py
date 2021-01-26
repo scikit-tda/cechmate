@@ -11,9 +11,6 @@ from .base import BaseFiltration
 __all__ = ["Alpha"]
 
 
-MIN_DET = 1e-10
-
-
 class Alpha(BaseFiltration):
     """ Construct an Alpha filtration from the given data.
 
