@@ -6,3 +6,5 @@ cechmate.egg-info
 .DS_Store
 
 stubs
+
+*.idea
