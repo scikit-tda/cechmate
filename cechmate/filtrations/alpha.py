@@ -47,7 +47,7 @@ class Alpha(BaseFiltration):
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
-        X = X.astype(np.float_)
+        X = X.astype(np.float64)
         delaunay_faces = np.sort(spatial.Delaunay(X).simplices, axis=1)
 
         if self.verbose:
@@ -78,7 +78,7 @@ def alpha_build(X, delaunay_faces):
     X: Nxd array
         Array of N Euclidean vectors in d dimensions
     """
-    D = delaunay_faces.shape[1] - 1  # Top dimension
+    D = X.shape[1]  # Top dimension
     delaunay_faces = [tuple(simplex) for simplex in delaunay_faces]
     filtration = {dim: {} for dim in range(D, 0, -1)}
 
