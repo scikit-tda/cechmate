@@ -2,10 +2,10 @@ import time
 import warnings
 
 import numpy as np
-from numba import njit, jit, typeof
+from numba import njit
 from numba import types
 from numba.cpython.unsafe.tuple import tuple_setitem
-from numba.typed import Dict, List
+from numba.typed import Dict
 from numpy import linalg
 from scipy import spatial
 
