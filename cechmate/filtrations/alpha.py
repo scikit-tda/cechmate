@@ -1,7 +1,11 @@
-import numpy as np
 import time
 import warnings
-from numba import njit
+
+import numpy as np
+from numba import njit, jit, typeof
+from numba import types
+from numba.cpython.unsafe.tuple import tuple_setitem
+from numba.typed import Dict, List
 from numpy import linalg
 from scipy import spatial
 
@@ -48,7 +52,17 @@ class Alpha(BaseFiltration):
             tic = time.time()
 
         X = X.astype(np.float64)
-        delaunay_faces = np.sort(spatial.Delaunay(X).simplices, axis=1)
+        D = X.shape[1]  # Top dimension
+
+        # Need to create dummy NaN dictionaries for Numba's type inference to
+        # work.
+        filtration_upper = Dict.empty(types.UniTuple(types.int64, D + 2),
+                                      types.float64)
+        filtration_current = Dict.empty(types.UniTuple(types.int64, D + 1),
+                                        types.float64)
+        for simplex in np.sort(spatial.Delaunay(X).simplices,
+                               axis=1).astype(np.int64):
+            filtration_current[tuple(simplex)] = np.nan
 
         if self.verbose:
             print(
@@ -58,7 +72,20 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
-        self.simplices_ = alpha_build(X, delaunay_faces)
+        self.simplices_ = []
+        for dim in range(D, 0, -1):
+            filtration_lower = alpha_build(X, filtration_current,
+                                           filtration_upper)
+            typ = types.UniTuple(types.int64, dim + 1)
+            self.simplices_.extend(
+                _unpack_dict_and_sqrt(filtration_current, typ)
+                )
+            filtration_upper = filtration_current
+            filtration_current = filtration_lower
+
+        # Add 0-dimensional simplices
+        self.simplices_.extend((((i,), 0.)
+                                for i in range(X.shape[0])))
 
         if self.verbose:
             print(
@@ -69,7 +96,22 @@ class Alpha(BaseFiltration):
         return self.simplices_
 
 
-def alpha_build(X, delaunay_faces):
+@njit
+def _unpack_dict_and_sqrt(d, typ):
+    # Force type inference for `d` given `typ`
+    d_dummy = Dict.empty(typ, types.float64)
+    key_dummy = next(iter(d))
+    d_dummy[key_dummy] = d[key_dummy]
+
+    unpacked_and_sqrt = []
+    for key in d:
+        unpacked_and_sqrt.append((key, np.sqrt(d[key])))
+
+    return unpacked_and_sqrt
+
+
+@njit
+def alpha_build(X, filtration_current, filtration_upper):
     """
     Do the Alpha filtration of a Euclidean point set (requires scipy)
 
@@ -78,65 +120,63 @@ def alpha_build(X, delaunay_faces):
     X: Nxd array
         Array of N Euclidean vectors in d dimensions
     """
-    D = X.shape[1]  # Top dimension
-    delaunay_faces = [tuple(simplex) for simplex in delaunay_faces]
-    filtration = {dim: {} for dim in range(D, 0, -1)}
+    filtration_lower = {}
 
-    # Special iteration for highest dimensional simplices
-    for sigma in delaunay_faces:
-        filtration[D][sigma] = _squared_circumradius(X[sigma, :])
-        for i in range(D + 1):
-            tau = sigma[:i] + sigma[i + 1:]
-            if tau in filtration[D - 1] and \
-                    not np.isnan(filtration[D - 1][tau]):
-                filtration[D - 1][tau] = \
-                    min(filtration[D - 1][tau], filtration[D][sigma])
-            else:
-                x, r_sq = _circumcircle(X[tau, :])
-                if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
-                    filtration[D - 1][tau] = filtration[D][sigma]
+    if len(next(iter(filtration_current))) == X.shape[1] + 1:
+        # Special iteration for highest dimensional simplices, does not check
+        # for np.nan
+        for sigma in filtration_current:
+            filtration_current[sigma] = \
+                _squared_circumradius(X[np.asarray(sigma)])
+            for x in _drop_elements(sigma):
+                tau = x[1]
+                vertex = x[0]
+                if tau in filtration_lower and \
+                        not np.isnan(filtration_lower[tau]):
+                    filtration_lower[tau] = \
+                        min(filtration_lower[tau], filtration_current[sigma])
                 else:
-                    filtration[D - 1][tau] = np.nan
-
-    for dim in range(D - 1, 1, -1):
-        for sigma in filtration[dim]:
-            if np.isnan(filtration[dim][sigma]):
-                filtration[dim][sigma] = _squared_circumradius(X[sigma, :])
-            for i in range(dim + 1):
-                tau = sigma[:i] + sigma[i + 1:]
-                if tau in filtration[dim - 1] and \
-                        not np.isnan(filtration[dim - 1][tau]):
-                    filtration[dim - 1][tau] = \
-                        min(filtration[dim - 1][tau], filtration[dim][sigma])
-                else:
-                    x, r_sq = _circumcircle(X[tau, :])
-                    if np.sum((X[sigma[i]] - x) ** 2) < r_sq:
-                        filtration[dim - 1][tau] = filtration[dim][sigma]
+                    x, r_sq = _circumcircle(X[np.asarray(tau)])
+                    if np.sum((X[vertex] - x) ** 2) < r_sq:
+                        filtration_lower[tau] = filtration_current[sigma]
                     else:
-                        filtration[dim - 1][tau] = np.nan
+                        filtration_lower[tau] = np.nan
 
-    # Special iteration for dimension one simplices
-    for sigma in filtration[1]:
-        if np.isnan(filtration[1][sigma]):
-            filtration[1][sigma] = _squared_circumradius(X[sigma, :])
+    elif len(next(iter(filtration_current))) == 2:
+        # Special iteration for dimension one simplices, does not return
+        # filtration_lower
+        for sigma in filtration_current:
+            if np.isnan(filtration_current[sigma]):
+                filtration_current[sigma] = \
+                    _squared_circumradius(X[np.asarray(sigma)])
 
-    # Take care of numerical artifacts that may result in simplices with
-    # greater filtration values than their co-faces
-    for dim in range(D, 1, -1):
-        for sigma in filtration[dim]:
-            for i in range(dim + 1):
-                tau = sigma[:i] + sigma[i + 1:]
-                if filtration[dim - 1][tau] > filtration[dim][sigma]:
-                    filtration[dim - 1][tau] = filtration[dim][sigma]
+    else:
+        for sigma in filtration_current:
+            if np.isnan(filtration_current[sigma]):
+                filtration_current[sigma] = \
+                    _squared_circumradius(X[np.asarray(sigma)])
+            for x in _drop_elements(sigma):
+                tau = x[1]
+                vertex = x[0]
+                if tau in filtration_lower and \
+                        not np.isnan(filtration_lower[tau]):
+                    filtration_lower[tau] = \
+                        min(filtration_lower[tau], filtration_current[sigma])
+                else:
+                    x, r_sq = _circumcircle(X[np.asarray(tau)])
+                    if np.sum((X[vertex] - x) ** 2) < r_sq:
+                        filtration_lower[tau] = filtration_current[sigma]
+                    else:
+                        filtration_lower[tau] = np.nan
 
-    # Convert from squared radii to radii and return list of simplices
-    simplices = [((i,), 0) for i in range(X.shape[0])]
-    simplices += [
-        (sigma, np.sqrt(filtration[dim][sigma]))
-        for dim in range(1, D + 1) for sigma in filtration[dim]
-        ]
+    # Correct artifacts
+    for omega in filtration_upper:
+        for x in _drop_elements(omega):
+            sigma = x[1]
+            filtration_current[sigma] = min(filtration_current[sigma],
+                                            filtration_upper[omega])
 
-    return simplices
+    return filtration_lower
 
 
 @njit
@@ -169,11 +209,6 @@ def _squared_circumradius(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
-        #     spatial.distance.pdist(X, metric="sqeuclidean")
-        #     )
-        # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
-        #                                                  metric="sqeuclidean")
         cayleigh_menger[1:, 1:] = _pdist(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
@@ -212,11 +247,6 @@ def _circumcircle(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        # cayleigh_menger[1:, 1:] = spatial.distance.squareform(
-        #     spatial.distance.pdist(X, metric="sqeuclidean")
-        #     )
-        # cayleigh_menger[1:, 1:] = spatial.distance.cdist(X, X,
-        #                                                  metric="sqeuclidean")
         cayleigh_menger[1:, 1:] = _pdist(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
@@ -243,3 +273,15 @@ def _pdist(A):
             dist[i, j] += TMP[i] + TMP[j]
 
     return dist
+
+
+@njit
+def _drop_elements(tup: tuple):
+    for x in range(len(tup)):
+        empty = tup[:-1]  # Not empty, but the right size and will be mutated
+        idx = 0
+        for i in range(len(tup)):
+            if i != x:
+                empty = tuple_setitem(empty, idx, tup[i])
+                idx += 1
+        yield tup[x], empty
