@@ -1,10 +1,13 @@
 import time
 import warnings
+from functools import lru_cache
 
 import numpy as np
+from numba import from_dtype
 from numba import njit
 from numba import types
 from numba.cpython.unsafe.tuple import tuple_setitem
+from numba.np.unsafe.ndarray import to_fixed_tuple
 from numba.typed import Dict
 from numpy import linalg
 from scipy import spatial
@@ -34,7 +37,7 @@ class Alpha(BaseFiltration):
     def build(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
-        
+
         Parameters
         ===========
         X: Nxd array
@@ -42,10 +45,8 @@ class Alpha(BaseFiltration):
         """
 
         if X.shape[0] < X.shape[1]:
-            warnings.warn(
-                "The input point cloud has more columns than rows; "
-                + "did you mean to transpose?"
-            )
+            warnings.warn("The input point cloud has more columns than rows; "
+                          "did you mean to transpose?")
 
         if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
@@ -54,120 +55,124 @@ class Alpha(BaseFiltration):
         X = X.astype(np.float64)
         D = X.shape[1]  # Top dimension
 
-        # Need to create dummy NaN dictionaries for Numba's type inference to
-        # work.
-        filtration_upper = Dict.empty(types.UniTuple(types.int64, D + 2),
-                                      types.float64)
-        filtration_current = Dict.empty(types.UniTuple(types.int64, D + 1),
-                                        types.float64)
-        for simplex in np.sort(spatial.Delaunay(X).simplices,
-                               axis=1).astype(np.int64):
-            filtration_current[tuple(simplex)] = np.nan
+        delaunay = np.sort(spatial.Delaunay(X).simplices, axis=1)
+        idx_dtype = from_dtype(delaunay.dtype)
+        alpha_build_top = _alpha_build_top(D)
 
         if self.verbose:
-            print(
-                "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
-                % (time.time() - tic)
-            )
+            print("Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
+                  % (time.time() - tic))
             print("Building alpha filtration...")
             tic = time.time()
 
-        self.simplices_ = []
-        for dim in range(D, 0, -1):
-            filtration_lower = alpha_build(X, filtration_current,
-                                           filtration_upper)
-            typ = types.UniTuple(types.int64, dim + 1)
-            self.simplices_.extend(
-                _unpack_dict_and_sqrt(filtration_current, typ)
-                )
+        filtration_current, filtration_lower = alpha_build_top(X, delaunay)
+        typ = types.UniTuple(idx_dtype, D + 1)
+        self.simplices_ = [_dict_to_list_sqrt(filtration_current, typ)]
+        filtration_upper = filtration_current
+        filtration_current = filtration_lower
+
+        for dim in range(D - 1, 1, -1):
+            filtration_lower = _alpha_build_mid(X, filtration_current,
+                                                filtration_upper)
+            typ = types.UniTuple(idx_dtype, dim + 1)
+            self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
             filtration_upper = filtration_current
             filtration_current = filtration_lower
+
+        _alpha_build_bottom(X, filtration_current, filtration_upper)
+        typ = types.UniTuple(idx_dtype, 2)
+        self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
 
         # Add 0-dimensional simplices
         self.simplices_.extend((((i,), 0.)
                                 for i in range(X.shape[0])))
 
         if self.verbose:
-            print(
-                "Finished building alpha filtration (Elapsed Time %.3g)"
-                % (time.time() - tic)
-            )
+            print("Finished building alpha filtration (Elapsed Time %.3g)"
+                  % (time.time() - tic))
 
         return self.simplices_
 
 
 @njit
-def _unpack_dict_and_sqrt(d, typ):
+def _dict_to_list_sqrt(d, typ):
     # Force type inference for `d` given `typ`
+    # TODO Find a more elegant solution
     d_dummy = Dict.empty(typ, types.float64)
     key_dummy = next(iter(d))
     d_dummy[key_dummy] = d[key_dummy]
 
-    unpacked_and_sqrt = []
+    filtration_sqrt = []
     for key in d:
-        unpacked_and_sqrt.append((key, np.sqrt(d[key])))
+        filtration_sqrt.append((key, np.sqrt(d[key])))
 
-    return unpacked_and_sqrt
+    return filtration_sqrt
+
+
+@lru_cache
+def _alpha_build_top(D):
+    len_tups = D + 1  # This needs to be a constant for the inner function
+
+    @njit
+    def _alpha_build_top_inner(X, delaunay):
+        filtration_current = {}
+        filtration_lower = {}
+
+        for sigma_arr in delaunay:
+            sigma = to_fixed_tuple(sigma_arr, len_tups)
+            filtration_current[sigma] = _squared_circumradius(X[sigma_arr])
+            for x in _drop_elements(sigma):
+                tau = x[1]
+                vertex = x[0]
+                if tau in filtration_lower and \
+                        not np.isnan(filtration_lower[tau]):
+                    filtration_lower[tau] = \
+                        min(filtration_lower[tau], filtration_current[sigma])
+                else:
+                    x, r_sq = _circumcircle(X[np.asarray(tau)])
+                    if np.sum((X[vertex] - x) ** 2) < r_sq:
+                        filtration_lower[tau] = filtration_current[sigma]
+                    else:
+                        filtration_lower[tau] = np.nan
+
+        return filtration_current, filtration_lower
+
+    return _alpha_build_top_inner
 
 
 @njit
-def alpha_build(X, filtration_current, filtration_upper):
-    """
-    Do the Alpha filtration of a Euclidean point set (requires scipy)
+def _alpha_build_bottom(X, filtration_current, filtration_upper):
+    for omega in filtration_upper:
+        for x in _drop_elements(omega):
+            sigma = x[1]
+            if np.isnan(filtration_current[sigma]):
+                filtration_current[sigma] = \
+                    _squared_circumradius(X[np.asarray(sigma)])
+            filtration_current[sigma] = min(filtration_current[sigma],
+                                            filtration_upper[omega])
 
-    Parameters
-    ===========
-    X: Nxd array
-        Array of N Euclidean vectors in d dimensions
-    """
+
+@njit
+def _alpha_build_mid(X, filtration_current, filtration_upper):
     filtration_lower = {}
 
-    if len(next(iter(filtration_current))) == X.shape[1] + 1:
-        # Special iteration for highest dimensional simplices, does not check
-        # for np.nan
-        for sigma in filtration_current:
+    for sigma in filtration_current:
+        if np.isnan(filtration_current[sigma]):
             filtration_current[sigma] = \
                 _squared_circumradius(X[np.asarray(sigma)])
-            for x in _drop_elements(sigma):
-                tau = x[1]
-                vertex = x[0]
-                if tau in filtration_lower and \
-                        not np.isnan(filtration_lower[tau]):
-                    filtration_lower[tau] = \
-                        min(filtration_lower[tau], filtration_current[sigma])
+        for x in _drop_elements(sigma):
+            tau = x[1]
+            vertex = x[0]
+            if tau in filtration_lower and \
+                    not np.isnan(filtration_lower[tau]):
+                filtration_lower[tau] = \
+                    min(filtration_lower[tau], filtration_current[sigma])
+            else:
+                x, r_sq = _circumcircle(X[np.asarray(tau)])
+                if np.sum((X[vertex] - x) ** 2) < r_sq:
+                    filtration_lower[tau] = filtration_current[sigma]
                 else:
-                    x, r_sq = _circumcircle(X[np.asarray(tau)])
-                    if np.sum((X[vertex] - x) ** 2) < r_sq:
-                        filtration_lower[tau] = filtration_current[sigma]
-                    else:
-                        filtration_lower[tau] = np.nan
-
-    elif len(next(iter(filtration_current))) == 2:
-        # Special iteration for dimension one simplices, does not return
-        # filtration_lower
-        for sigma in filtration_current:
-            if np.isnan(filtration_current[sigma]):
-                filtration_current[sigma] = \
-                    _squared_circumradius(X[np.asarray(sigma)])
-
-    else:
-        for sigma in filtration_current:
-            if np.isnan(filtration_current[sigma]):
-                filtration_current[sigma] = \
-                    _squared_circumradius(X[np.asarray(sigma)])
-            for x in _drop_elements(sigma):
-                tau = x[1]
-                vertex = x[0]
-                if tau in filtration_lower and \
-                        not np.isnan(filtration_lower[tau]):
-                    filtration_lower[tau] = \
-                        min(filtration_lower[tau], filtration_current[sigma])
-                else:
-                    x, r_sq = _circumcircle(X[np.asarray(tau)])
-                    if np.sum((X[vertex] - x) ** 2) < r_sq:
-                        filtration_lower[tau] = filtration_current[sigma]
-                    else:
-                        filtration_lower[tau] = np.nan
+                    filtration_lower[tau] = np.nan
 
     # Correct artifacts
     for omega in filtration_upper:
@@ -209,7 +214,7 @@ def _squared_circumradius(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = _pdist(X)
+        cayleigh_menger[1:, 1:] = _pdist_sq(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
 
@@ -247,7 +252,7 @@ def _circumcircle(X):
     else:
         cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
         cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = _pdist(X)
+        cayleigh_menger[1:, 1:] = _pdist_sq(X)
         bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
         r_sq = 0.25 * bar_coords[0, 0]
         x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
@@ -257,22 +262,22 @@ def _circumcircle(X):
 
 
 @njit
-def _pdist(A):
-    dist = np.dot(A, A.T)
+def _pdist_sq(A):
+    dist_sq = np.dot(A, A.T)
 
     TMP = np.empty(A.shape[0], dtype=A.dtype)
     for i in range(A.shape[0]):
         sum = 0.
         for j in range(A.shape[1]):
-            sum += A[i, j]**2
+            sum += A[i, j] ** 2
         TMP[i] = sum
 
     for i in range(A.shape[0]):
         for j in range(A.shape[0]):
-            dist[i, j] *= -2.
-            dist[i, j] += TMP[i] + TMP[j]
+            dist_sq[i, j] *= -2.
+            dist_sq[i, j] += TMP[i] + TMP[j]
 
-    return dist
+    return dist_sq
 
 
 @njit
