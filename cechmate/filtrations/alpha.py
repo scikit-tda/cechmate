@@ -65,9 +65,10 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
+        self.simplices_ = []
         filtration_current, filtration_lower = alpha_build_top(X, delaunay)
         typ = types.UniTuple(idx_dtype, D + 1)
-        self.simplices_ = [_dict_to_list_sqrt(filtration_current, typ)]
+        self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
         filtration_upper = filtration_current
         filtration_current = filtration_lower
 
