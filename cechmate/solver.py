@@ -5,7 +5,7 @@ import numpy as np
 import phat
 
 
-def phat_diagrams(simplices, show_inf=False, verbose=True):
+def phat_diagrams(simplices, show_inf=False, verbose=True, simplicial=True):
     """
     Compute the persistence diagram for :code:`simplices` using Phat.
 
@@ -19,11 +19,19 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
     show_inf: Boolean
         Determines whether or not to return points that never die.
 
+    simplicial: Boolean
+        Asserts that the filtration is a simplicial complex at every "dist," 
+        not some other kind of topological complex.
+
     Returns
     --------
     dgms: list of diagrams 
         the persistence diagram for Hk 
     """
+
+    ## Check that the filtration is a simplicial complex at every time step
+    if simplicial:
+        simplices = _assert_simplicial(simplices)
 
     ## Convert simplices representation to sparse pivot column
     #  -- sort by birth time, if tie, use order of simplex
@@ -58,6 +66,36 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
     dgms = [np.array(dgm) for dgm in dgms.values()]
 
     return dgms
+
+def _assert_simplicial(simplices):
+
+    # Initialize a set to keep track of simplices
+    existing_simplices = set()
+
+    # Initialize a list which is the (sub)filtration
+    # where the filtration is properly a simplicial
+    # complex at each point
+    simplicial_filtration = list()
+
+    # Sort the filtration by the time at which each simplex is
+    for s,t in sorted(simplices, key = lambda x: x[1],x[0]):
+
+        # Sort to ensure a uniform representation
+        sorted_simplex = tuple(sorted(s))
+
+        if sorted_simplex in existing_simplices:
+            continue
+
+        else:
+            existing_simplices.add()
+
+            # Don't sort in the final filtration because the
+            # user might care about the order in which the
+            # 0-faces are listed
+
+            simplicial_filtration.append((s,t))
+
+    return simplicial_filtration
 
 
 def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
