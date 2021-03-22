@@ -78,7 +78,7 @@ def _assert_simplicial(simplices):
     simplicial_filtration = list()
 
     # Sort the filtration by the time at which each simplex is
-    for s,t in sorted(simplices, key = lambda x: x[1],x[0]):
+    for s,t in sorted(simplices, key = lambda x: (x[1],x[0])):
 
         # Sort to ensure a uniform representation
         sorted_simplex = tuple(sorted(s))
