@@ -23,3 +23,11 @@ class Custom(BaseFiltration):
         """
 
         self.simplices_ = simplices
+
+    def diagrams(self, simplices=None, show_inf=False, verbose=True, simplicial=True):
+        """
+        Redefine the Custom version of diagrams so that simplicial defaults to True, rather
+        than false.
+        """
+
+        return super().diagrams(simplices,show_inf,verbose,simplicial)
