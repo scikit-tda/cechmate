@@ -5,7 +5,7 @@ import numpy as np
 import phat
 
 
-def phat_diagrams(simplices, show_inf=False, verbose=True, simplicial=True):
+def phat_diagrams(simplices, show_inf=False, verbose=True, simplicial=False):
     """
     Compute the persistence diagram for :code:`simplices` using Phat.
 
@@ -21,7 +21,8 @@ def phat_diagrams(simplices, show_inf=False, verbose=True, simplicial=True):
 
     simplicial: Boolean
         Asserts that the filtration is a simplicial complex at every "dist," 
-        not some other kind of topological complex.
+        not some other kind of topological complex. Defaults to not checking
+        to ensure speed of existing filtrations.
 
     Returns
     --------
@@ -87,7 +88,7 @@ def _assert_simplicial(simplices):
             continue
 
         else:
-            existing_simplices.add()
+            existing_simplices.add(sorted_simplex)
 
             # Don't sort in the final filtration because the
             # user might care about the order in which the
