@@ -28,7 +28,7 @@ class BaseFiltration:
         self.simplices_ = None
         self.diagrams_ = None
 
-    def diagrams(self, simplices=None, show_inf=False):
+    def diagrams(self, simplices=None, show_inf=False, verbose=True, simplicial=False):
         """Compute persistence diagrams for the simplices.
 
         Parameters
@@ -46,6 +46,6 @@ class BaseFiltration:
 
         """
         simplices = simplices or self.simplices_
-        self.diagrams_ = phat_diagrams(simplices, show_inf)
+        self.diagrams_ = phat_diagrams(simplices, show_inf, verbose, simplicial)
 
         return self.diagrams_
