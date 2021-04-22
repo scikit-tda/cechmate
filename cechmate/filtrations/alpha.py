@@ -34,7 +34,7 @@ class Alpha(BaseFiltration):
 
     """
 
-    def build(self, X):
+    def build(self, X, max_cond=1e3):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
 
@@ -66,7 +66,7 @@ class Alpha(BaseFiltration):
             tic = time.time()
 
         self.simplices_ = []
-        filtration_current, filtration_lower = alpha_build_top(X, delaunay)
+        filtration_current, filtration_lower = alpha_build_top(X, delaunay, max_cond)
         typ = types.UniTuple(idx_dtype, D + 1)
         self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
         filtration_upper = filtration_current
@@ -74,13 +74,13 @@ class Alpha(BaseFiltration):
 
         for dim in range(D - 1, 1, -1):
             filtration_lower = _alpha_build_mid(X, filtration_current,
-                                                filtration_upper)
+                                                filtration_upper, max_cond)
             typ = types.UniTuple(idx_dtype, dim + 1)
             self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
             filtration_upper = filtration_current
             filtration_current = filtration_lower
 
-        _alpha_build_bottom(X, filtration_current, filtration_upper)
+        _alpha_build_bottom(X, filtration_current, filtration_upper, max_cond)
         typ = types.UniTuple(idx_dtype, 2)
         self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
 
@@ -115,13 +115,16 @@ def _alpha_build_top(D):
     len_tups = D + 1  # This needs to be a constant for the inner function
 
     @njit
-    def _alpha_build_top_inner(X, delaunay):
+    def _alpha_build_top_inner(X, delaunay, max_cond):
+        squared_circumradius_func = _squared_circumradius
+        circumcircle_func = _circumcircle_edge if len_tups == 3 else _circumcircle
+
         filtration_current = {}
         filtration_lower = {}
 
         for sigma_arr in delaunay:
             sigma = to_fixed_tuple(sigma_arr, len_tups)
-            filtration_current[sigma] = _squared_circumradius(X[sigma_arr])
+            filtration_current[sigma] = squared_circumradius_func(X[sigma_arr], max_cond)
             for x in _drop_elements(sigma):
                 tau = x[1]
                 vertex = x[0]
@@ -130,7 +133,7 @@ def _alpha_build_top(D):
                     filtration_lower[tau] = \
                         min(filtration_lower[tau], filtration_current[sigma])
                 else:
-                    x, r_sq = _circumcircle(X[np.asarray(tau)])
+                    x, r_sq = circumcircle_func(X[np.asarray(tau)], max_cond)
                     if np.sum((X[vertex] - x) ** 2) < r_sq:
                         filtration_lower[tau] = filtration_current[sigma]
                     else:
@@ -142,25 +145,28 @@ def _alpha_build_top(D):
 
 
 @njit
-def _alpha_build_bottom(X, filtration_current, filtration_upper):
+def _alpha_build_bottom(X, filtration_current, filtration_upper, max_cond):
     for omega in filtration_upper:
         for x in _drop_elements(omega):
             sigma = x[1]
             if np.isnan(filtration_current[sigma]):
                 filtration_current[sigma] = \
-                    _squared_circumradius(X[np.asarray(sigma)])
+                    _squared_circumradius_edge(X[np.asarray(sigma)], max_cond)
             filtration_current[sigma] = min(filtration_current[sigma],
                                             filtration_upper[omega])
 
 
 @njit
-def _alpha_build_mid(X, filtration_current, filtration_upper):
+def _alpha_build_mid(X, filtration_current, filtration_upper, max_cond):
+    squared_circumradius_func = _squared_circumradius
+    circumcircle_func = _circumcircle_edge if len(next(iter(filtration_current))) == 3 else _circumcircle
+
     filtration_lower = {}
 
     for sigma in filtration_current:
         if np.isnan(filtration_current[sigma]):
             filtration_current[sigma] = \
-                _squared_circumradius(X[np.asarray(sigma)])
+                squared_circumradius_func(X[np.asarray(sigma)], max_cond)
         for x in _drop_elements(sigma):
             tau = x[1]
             vertex = x[0]
@@ -169,7 +175,7 @@ def _alpha_build_mid(X, filtration_current, filtration_upper):
                 filtration_lower[tau] = \
                     min(filtration_lower[tau], filtration_current[sigma])
             else:
-                x, r_sq = _circumcircle(X[np.asarray(tau)])
+                x, r_sq = circumcircle_func(X[np.asarray(tau)], max_cond)
                 if np.sum((X[vertex] - x) ** 2) < r_sq:
                     filtration_lower[tau] = filtration_current[sigma]
                 else:
@@ -186,7 +192,7 @@ def _alpha_build_mid(X, filtration_current, filtration_upper):
 
 
 @njit
-def _squared_circumradius(X):
+def _squared_circumradius(X, max_cond):
     """
     Compute the circumcenter and circumradius of a simplex
 
@@ -207,23 +213,29 @@ def _squared_circumradius(X):
         (SC3) If there are more points than the ambient dimension plus one
         it returns (np.nan, np.nan)
     """
-    if X.shape[0] == 2:
-        # Special case of an edge, which is very simple
-        dX = X[1] - X[0]
-        r_sq = 0.25 * np.sum(dX ** 2)
-
-    else:
-        cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
-        cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = _pdist_sq(X)
-        bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
-        r_sq = 0.25 * bar_coords[0, 0]
+    cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
+    cayleigh_menger[0, 0] = 0
+    cayleigh_menger[1:, 1:] = _pdist_sq(X)
+    cond = np.linalg.cond(cayleigh_menger)
+    if cond > max_cond:
+        return np.inf
+    bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
+    r_sq = 0.25 * bar_coords[0, 0]
 
     return r_sq
 
 
 @njit
-def _circumcircle(X):
+def _squared_circumradius_edge(X, max_cond):
+    # Special case of an edge, which is very simple
+    dX = X[1] - X[0]
+    r_sq = 0.25 * np.sum(dX ** 2)
+
+    return r_sq
+
+
+@njit
+def _circumcircle(X, max_cond):
     """
     Compute the circumcenter and circumradius of a simplex
 
@@ -244,20 +256,27 @@ def _circumcircle(X):
         (SC3) If there are more points than the ambient dimension plus one
         it returns (np.nan, np.nan)
     """
-    if X.shape[0] == 2:
-        # Special case of an edge, which is very simple
-        dX = X[1] - X[0]
-        r_sq = 0.25 * np.sum(dX ** 2)
-        x = X[0] + 0.5 * dX
+    cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
+    cayleigh_menger[0, 0] = 0
+    cayleigh_menger[1:, 1:] = _pdist_sq(X)
+    cond = np.linalg.cond(cayleigh_menger)
+    if cond > max_cond:
+        return np.full(X.shape[1], np.inf), np.inf
 
-    else:
-        cayleigh_menger = np.ones((X.shape[0] + 1, X.shape[0] + 1))
-        cayleigh_menger[0, 0] = 0
-        cayleigh_menger[1:, 1:] = _pdist_sq(X)
-        bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
-        r_sq = 0.25 * bar_coords[0, 0]
-        x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
-                   axis=1)
+    bar_coords = -2 * np.linalg.inv(cayleigh_menger)[:1, :]
+    r_sq = 0.25 * bar_coords[0, 0]
+    x = np.sum((bar_coords[:, 1:] / np.sum(bar_coords[:, 1:])) * X.T,
+               axis=1)
+
+    return x, r_sq
+
+
+@njit
+def _circumcircle_edge(X, max_cond):
+    # Special case of an edge, which is very simple
+    dX = X[1] - X[0]
+    r_sq = 0.25 * np.sum(dX ** 2)
+    x = X[0] + 0.5 * dX
 
     return x, r_sq
 
@@ -277,6 +296,7 @@ def _pdist_sq(A):
         for j in range(A.shape[0]):
             dist_sq[i, j] *= -2.
             dist_sq[i, j] += TMP[i] + TMP[j]
+        dist_sq[i, i] = 0.
 
     return dist_sq
 
@@ -290,4 +310,5 @@ def _drop_elements(tup: tuple):
             if i != x:
                 empty = tuple_setitem(empty, idx, tup[i])
                 idx += 1
+
         yield tup[x], empty
