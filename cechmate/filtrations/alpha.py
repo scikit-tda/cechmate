@@ -23,7 +23,8 @@ class Alpha(BaseFiltration):
     Note
     =====
 
-    Alpha filtrations use radius instead of diameter. Multiply results or X by 2 when comparing the filtration to Rips or Cech.
+    Alpha filtrations use radius instead of diameter. Multiply results or X by
+    2 when comparing the filtration to Rips or Cech.
 
     Examples
     ========
@@ -66,7 +67,8 @@ class Alpha(BaseFiltration):
             tic = time.time()
 
         self.simplices_ = []
-        filtration_current, filtration_lower = alpha_build_top(X, delaunay, max_cond)
+        filtration_current, filtration_lower = \
+            alpha_build_top(X, delaunay, max_cond)
         typ = types.UniTuple(idx_dtype, D + 1)
         self.simplices_.extend(_dict_to_list_sqrt(filtration_current, typ))
         filtration_upper = filtration_current
@@ -117,14 +119,18 @@ def _alpha_build_top(D):
     @njit
     def _alpha_build_top_inner(X, delaunay, max_cond):
         squared_circumradius_func = _squared_circumradius
-        circumcircle_func = _circumcircle_edge if len_tups == 3 else _circumcircle
+        if len_tups == 3:
+            circumcircle_func = _circumcircle_edge
+        else:
+            circumcircle_func = _circumcircle
 
         filtration_current = {}
         filtration_lower = {}
 
         for sigma_arr in delaunay:
             sigma = to_fixed_tuple(sigma_arr, len_tups)
-            filtration_current[sigma] = squared_circumradius_func(X[sigma_arr], max_cond)
+            filtration_current[sigma] = squared_circumradius_func(X[sigma_arr],
+                                                                  max_cond)
             for x in _drop_elements(sigma):
                 tau = x[1]
                 vertex = x[0]
@@ -159,7 +165,10 @@ def _alpha_build_bottom(X, filtration_current, filtration_upper, max_cond):
 @njit
 def _alpha_build_mid(X, filtration_current, filtration_upper, max_cond):
     squared_circumradius_func = _squared_circumradius
-    circumcircle_func = _circumcircle_edge if len(next(iter(filtration_current))) == 3 else _circumcircle
+    if len(next(iter(filtration_current))) == 3:
+        circumcircle_func = _circumcircle_edge
+    else:
+        circumcircle_func = _circumcircle
 
     filtration_lower = {}
 
