@@ -25,14 +25,14 @@ class Cech(BaseFiltration):
 
         Parameters
         ===========
-        
+
         X: Nxd array
             N Euclidean vectors in d dimensions
 
         Returns
         ==========
-        
-        simplices: 
+
+        simplices:
             Cech filtration for the data X
         """
 

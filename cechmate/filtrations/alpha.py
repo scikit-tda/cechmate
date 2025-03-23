@@ -12,7 +12,7 @@ __all__ = ["Alpha"]
 
 
 class Alpha(BaseFiltration):
-    """ Construct an Alpha filtration from the given data.
+    """Construct an Alpha filtration from the given data.
 
     Note
     =====
@@ -33,7 +33,7 @@ class Alpha(BaseFiltration):
     def build(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
-        
+
         Parameters
         ===========
         X: Nxd array
@@ -70,7 +70,7 @@ class Alpha(BaseFiltration):
                 simplex = delaunay_faces[s, :]
                 for sigma in itertools.combinations(simplex, dim):
                     sigma = tuple(sorted(sigma))
-                    if not sigma in filtration:
+                    if sigma not in filtration:
                         rSqr = self._get_circumcenter(X[sigma, :])[1]
                         if np.isfinite(rSqr):
                             filtration[sigma] = rSqr
@@ -120,29 +120,29 @@ class Alpha(BaseFiltration):
     def _get_circumcenter(self, X):
         """
         Compute the circumcenter and circumradius of a simplex
-        
+
         Parameters
         ----------
         X : ndarray (N, d)
             Coordinates of points on an N-simplex in d dimensions
-        
+
         Returns
         -------
         (circumcenter, circumradius)
-            A tuple of the circumcenter and squared circumradius.  
+            A tuple of the circumcenter and squared circumradius.
             (SC1) If there are fewer points than the ambient dimension plus one,
             then return the circumcenter corresponding to the smallest
             possible squared circumradius
-            (SC2) If the points are not in general position, 
+            (SC2) If the points are not in general position,
             it returns (np.inf, np.inf)
             (SC3) If there are more points than the ambient dimension plus one
             it returns (np.nan, np.nan)
         """
-        X0 = np.array(X)
+        np.array(X)
         if X.shape[0] == 2:
             # Special case of an edge, which is very simple
             dX = X[1, :] - X[0, :]
-            rSqr = 0.25 * np.sum(dX ** 2)
+            rSqr = 0.25 * np.sum(dX**2)
             x = X[0, :] + 0.5 * dX
             return (x, rSqr)
         if X.shape[0] > X.shape[1] + 1:  # SC3 (too many points)
@@ -164,23 +164,24 @@ class Alpha(BaseFiltration):
         D = np.ones((X.shape[0], X.shape[0] + 1))
         # Subtract off centroid and scale down for numerical stability
         Y = X - muX
-        scaleSqr = np.max(np.sum(Y ** 2, 1))
+        scaleSqr = np.max(np.sum(Y**2, 1))
         scaleSqr = 1
         scale = np.sqrt(scaleSqr)
         Y /= scale
 
         D[:, 1:-1] = Y
         D[:, 0] = np.sum(D[:, 1:-1] ** 2, 1)
-        minor = lambda A, j: A[
-            :, np.concatenate((np.arange(j), np.arange(j + 1, A.shape[1])))
-        ]
+
+        def minor(A, j):
+            return A[:, np.concatenate((np.arange(j), np.arange(j + 1, A.shape[1])))]
+
         dxs = np.array([linalg.det(minor(D, i)) for i in range(1, D.shape[1] - 1)])
         alpha = linalg.det(minor(D, 0))
         if np.abs(alpha) > Alpha.MIN_DET:
             signs = (-1) ** np.arange(len(dxs))
             x = dxs * signs / (2 * alpha) + muX  # Add back centroid
             gamma = ((-1) ** len(dxs)) * linalg.det(minor(D, D.shape[1] - 1))
-            rSqr = (np.sum(dxs ** 2) + 4 * alpha * gamma) / (4 * alpha * alpha)
+            rSqr = (np.sum(dxs**2) + 4 * alpha * gamma) / (4 * alpha * alpha)
             x *= scale
             rSqr *= scaleSqr
             if V.size > 0:

@@ -60,7 +60,7 @@ class Rips(BaseFiltration):
         :param X: An Nxd array of N Euclidean vectors in d dimensions
         :returns D: An NxN array of all pairwise distances
         """
-        XSqr = np.sum(X ** 2, 1)
+        XSqr = np.sum(X**2, 1)
         D = XSqr[:, None] + XSqr[None, :] - 2 * X.dot(X.T)
         D[D < 0] = 0  # Numerical precision
         D = np.sqrt(D)

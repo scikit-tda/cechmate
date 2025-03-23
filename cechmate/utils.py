@@ -11,7 +11,7 @@ def sparse_to_dense(sparse_bm):
     Parameters
     ============
 
-    sparse_bm: 
+    sparse_bm:
         Sparse boundary matrix.
 
     Returns
