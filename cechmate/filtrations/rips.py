@@ -18,7 +18,7 @@ class Rips(BaseFiltration):
 
     """
 
-    def build(self, X):
+    def fit(self, X):
         """Compute the rips filtration of a Euclidean point set.
 
         Parameters
