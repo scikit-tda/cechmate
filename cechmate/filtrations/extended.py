@@ -1,5 +1,5 @@
 import numpy as np
-import phat
+# import phat
 
 from .base import BaseFiltration
 
@@ -215,10 +215,10 @@ class Extended(BaseFiltration):
     def _compute_persistence_pairs(self, boundary_matrix=None):
         boundary_matrix = boundary_matrix or self._boundary_matrix
 
-        self._reduced_boundary_matrix = phat.boundary_matrix(
-            columns=boundary_matrix,
-            representation=phat.representations.sparse_pivot_column,
-        )
+        # self._reduced_boundary_matrix = phat.boundary_matrix(
+        # columns=boundary_matrix,
+        # representation=phat.representations.sparse_pivot_column,
+        # )
 
         pairs = self._reduced_boundary_matrix.compute_persistence_pairs()
         pairs.sort()
