@@ -1,4 +1,5 @@
 import itertools
+from typing import Sequence
 import numpy as np
 
 from .base import BaseFiltration
@@ -20,7 +21,7 @@ class Cech(BaseFiltration):
 
     """
 
-    def build(self, X):
+    def fit(self, X) -> list[tuple[list[int], int]]:
         """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
 
         Parameters
@@ -39,10 +40,7 @@ class Cech(BaseFiltration):
         N = X.shape[0]
         xr = np.arange(N)
         xrl = xr.tolist()
-        maxdim = self.maxdim
-        if not self.maxdim:
-            maxdim = X.shape[1] - 1
-
+        maxdim = self.maxdim or X.shape[1] - 1
         miniball = miniball_cache(X)
 
         # start with vertices
@@ -51,7 +49,7 @@ class Cech(BaseFiltration):
         # then higher order simplices
         for k in range(maxdim + 1):
             for idxs in itertools.combinations(xrl, k + 2):
-                C, r2 = miniball(frozenset(idxs), frozenset([]))
+                _, r2 = miniball(frozenset(idxs), frozenset([]))
                 simplices.append((list(idxs), np.sqrt(r2)))
 
         self.simplices_ = simplices
