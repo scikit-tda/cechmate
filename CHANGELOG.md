@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- (#30) Updated `.readthedocs.yaml` and `docs/conf.py` to current RTDs requirements.
-- (#29) Converted project to a `project.toml` style build, fixing build process.
+- (#30) Update `.readthedocs.yaml` and `docs/conf.py` to current RTDs requirements.
+- (#31) Update Github actions to current versions.
+- (#29) Convert project to a `project.toml` style build, fixing build process.
 
 ## 0.0.10
 

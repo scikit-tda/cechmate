@@ -1,6 +1,6 @@
 """All filtrations should have a base interface."""
 
-from ..solver import phat_diagrams
+# from ..solver import phat_diagrams
 
 
 class BaseFiltration:
@@ -43,6 +43,6 @@ class BaseFiltration:
 
         """
         simplices = simplices or self.simplices_
-        self.diagrams_ = phat_diagrams(simplices, show_inf)
+        # self.diagrams_ = phat_diagrams(simplices, show_inf)
 
         return self.diagrams_
