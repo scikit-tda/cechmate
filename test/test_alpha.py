@@ -1,16 +1,16 @@
 import pytest
 
 import numpy as np
-from cechmate import Alpha
+from cechmate.filtrations import Alpha
 
 
 @pytest.fixture
 def triangle():
     x = np.array(
         [
-            [0, 0.0],
-            [1, 1.0],
-            [0, 1.0],
+            [0.0, 0.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
         ]
     )
 
@@ -19,7 +19,7 @@ def triangle():
 
 def test_triangle(triangle):
     """Expect 3 vertices, 3 edges, and a triangle"""
-    a = Alpha(2).build(triangle)
+    a = Alpha(maxdim=2).fit(triangle)
 
     assert len(a) == 7
 
@@ -687,6 +687,7 @@ def test_precision():
     )
     X = np.reshape(X, (int(X.size / 3), 3))
     alpha = Alpha()
-    alpha_filtration = alpha.build(X)
-    dgms = alpha.diagrams(alpha_filtration)
+    alpha_filtration = alpha.fit(X)
+    dgms = alpha.transform(alpha_filtration)
     assert len(dgms) == 3
+    assert len([s for s in alpha_filtration if len(s[0]) == 1]) == X.shape[0]

@@ -1,14 +1,20 @@
+from collections import defaultdict
 import itertools
 import time
 import warnings
+import logging
 
 import numpy as np
 from numpy import linalg
 from scipy import spatial
 
-from .base import BaseFiltration
+from cechmate.filtrations.base import BaseFiltration
+import gudhi
+from numpy.typing import NDArray
 
 __all__ = ["Alpha"]
+
+logger = logging.getLogger(__name__)
 
 
 class Alpha(BaseFiltration):
@@ -30,7 +36,7 @@ class Alpha(BaseFiltration):
 
     MIN_DET = 1e-10
 
-    def build(self, X):
+    def fit(self, X):
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
 
@@ -42,18 +48,17 @@ class Alpha(BaseFiltration):
 
         if X.shape[0] < X.shape[1]:
             warnings.warn(
-                "The input point cloud has more columns than rows; "
+                "The input point cloud has more dimensions than data points; "
                 + "did you mean to transpose?"
             )
-        maxdim = self.maxdim
-        if not self.maxdim:
-            maxdim = X.shape[1] - 1
+        maxdim = self.maxdim or X.shape[1] - 1
 
         ## Step 1: Figure out the filtration
         if self.verbose:
             print("Doing spatial.Delaunay triangulation...")
             tic = time.time()
 
+        logger.info("Doing spatial.Delaunay triangulation...")
         delaunay_faces = spatial.Delaunay(X).simplices
 
         if self.verbose:
@@ -64,43 +69,60 @@ class Alpha(BaseFiltration):
             print("Building alpha filtration...")
             tic = time.time()
 
-        filtration = {}
+        logger.info("Building alpha filtration...")
+
+        filtration = defaultdict(lambda: float("inf"))
+        circumcenter_cache = {}
+
         for dim in range(maxdim + 2, 1, -1):
             for s in range(delaunay_faces.shape[0]):
                 simplex = delaunay_faces[s, :]
                 for sigma in itertools.combinations(simplex, dim):
                     sigma = tuple(sorted(sigma))
-                    if sigma not in filtration:
-                        rSqr = self._get_circumcenter(X[sigma, :])[1]
+
+                    if filtration[sigma] == float("inf"):
+                        if sigma not in circumcenter_cache:
+                            circumcenter_cache[sigma] = self._get_circumcenter(
+                                X[sigma, :]
+                            )
+                        _, rSqr = circumcenter_cache[sigma]
                         if np.isfinite(rSqr):
                             filtration[sigma] = rSqr
+
                     if sigma in filtration:
                         for i in range(dim):  # Propagate alpha filtration value
                             tau = sigma[0:i] + sigma[i + 1 : :]
-                            if tau in filtration:
+                            if filtration[tau] == float("inf"):
+                                if len(tau) > 1:
+                                    if tau not in circumcenter_cache:
+                                        circumcenter_cache[tau] = (
+                                            self._get_circumcenter(X[tau, :])
+                                        )
+                                    xtau, rtauSqr = circumcenter_cache[tau]
+                                    if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
+                                        filtration[tau] = filtration[sigma]
+                            else:
                                 filtration[tau] = min(
                                     filtration[tau], filtration[sigma]
                                 )
-                            elif len(tau) > 1 and sigma in filtration:
-                                # If Tau is not empty
-                                xtau, rtauSqr = self._get_circumcenter(X[tau, :])
-                                if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
-                                    filtration[tau] = filtration[sigma]
+
         # Convert from squared radii to radii
         for sigma in filtration:
             filtration[sigma] = np.sqrt(filtration[sigma])
 
         ## Step 2: Take care of numerical artifacts that may result
         ## in simplices with greater filtration values than their co-faces
-        simplices_bydim = [set([]) for i in range(maxdim + 2)]
+        simplices_bydim = [set([]) for _ in range(maxdim + 2)]
         for simplex in filtration.keys():
             simplices_bydim[len(simplex) - 1].add(simplex)
+
         simplices_bydim = simplices_bydim[2::]
         simplices_bydim.reverse()
+
         for simplices_dim in simplices_bydim:
             for sigma in simplices_dim:
                 for i in range(len(sigma)):
-                    tau = sigma[0:i] + sigma[i + 1 : :]
+                    tau = sigma[0:i] + sigma[i + 1 :]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
 
@@ -110,8 +132,7 @@ class Alpha(BaseFiltration):
                 % (time.time() - tic)
             )
 
-        simplices = [([i], 0) for i in range(X.shape[0])]
-        simplices.extend(filtration.items())
+        simplices = list(filtration.items())
 
         self.simplices_ = simplices
 
@@ -189,3 +210,30 @@ class Alpha(BaseFiltration):
                 x = x.dot(V.T) + muV
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
+
+    def transform(self, simplices=None, ripser_format=True) -> list[NDArray]:
+        """
+        Compute persistent homology.
+        """
+        simplices_ = simplices or self.simplices_
+
+        simplex_tree = gudhi.SimplexTree()
+        for simplex, filtration_value in simplices_:
+            simplex_tree.insert(simplex, filtration_value)
+
+        persistence = simplex_tree.persistence()
+
+        if not ripser_format:
+            return persistence
+
+        # convert to ripser.py format
+        ripser_output = []
+        for dim, (birth, death) in persistence:
+            while len(ripser_output) <= dim:
+                ripser_output.append([])
+            if death == float("inf"):
+                death = -1
+            ripser_output[dim].append(np.array([birth, death]))
+        ripser_output = [np.array(dgm) for dgm in ripser_output]
+
+        return ripser_output
