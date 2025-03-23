@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cechmate"
+dynamic = ["version"]
+description = 'Custom filtration constructors for Python'
+readme = "README.md"
+authors = [
+  { name = "Chris Tralie", email = "chris.tralie@gmail.com" },
+  { name = "Nathaniel Saul", email = "nat@riverasaul.com" },
+]
+maintainers = [
+  { name = "Chris Tralie", email = "chris.tralie@gmail.com" },
+  { name = "Nathaniel Saul", email = "nat@riverasaul.com" },
+  { name = "Michael Catanzaro", email = "catanzaromj@pm.me" },
+]
+
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "persim",
+  # "phat==1.5.0", #1.5.0a0
+  "scipy",
+]
+
+classifiers = [
+  'Development Status :: 3 - Alpha',
+  'Intended Audience :: Science/Research',
+  'Intended Audience :: Education',
+  'Intended Audience :: Financial and Insurance Industry',
+  'Intended Audience :: Healthcare Industry',
+  'Topic :: Scientific/Engineering :: Information Analysis',
+  'Topic :: Scientific/Engineering :: Mathematics',
+  'License :: OSI Approved :: MIT License',
+  'Programming Language :: Python',
+]
+
+keywords = [
+  'persistent homology',
+  'persistence images',
+  'persistence diagrams',
+  'topological data analysis',
+  'algebraic topology',
+  'unsupervised learning',
+  'filtrations',
+  'Cech',
+  'Alpha',
+  'Rips',
+]
+
+[project.optional-dependencies]
+testing = ['kmapper', 'mock', 'networkx', 'pytest', 'pytest-cov']
+
+docs = ['sktda_docs_config']
+
+[project.urls]
+Homepage = "https://cechmate.scikit-tda.org"
+Documentation = "https://cechmate.scikit-tda.org"
+Repository = "https://github.com/scikit-tda/cechmate"
+Issues = "https://github.com/scikit-tda/cechmate/issues"
+Changelog = "https://github.com/scikit-tda/cechmate/blob/master/RELEASE.txt"
