@@ -35,5 +35,5 @@ def test_alpha():
     X = np.random.randn(15, 4)
     X = X / np.sqrt(np.sum(X**2, 1)[:, None])
     tic = time.time()
-    Alpha().build(X)
-    time.time() - tic
+    diagrams = Alpha().fit(X)
+    phattime = time.time() - tic
