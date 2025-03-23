@@ -28,7 +28,6 @@
 #
 
 import numpy as np
-import random
 import functools
 
 
@@ -42,14 +41,14 @@ def get_circumsphere(S):
     Returns
     -------
     C, r2 : ((2) ndarray, float)
-        The center and the squared radius of the circumsphere 
+        The center and the squared radius of the circumsphere
     """
 
     U = S[1:] - S[0]
-    B = np.sqrt(np.sum(U ** 2, axis=1))
+    B = np.sqrt(np.sum(U**2, axis=1))
     U /= B[:, None]
     C = np.dot(np.linalg.solve(np.inner(U, U), 0.5 * B), U)
-    return C + S[0], np.sum(C ** 2)
+    return C + S[0], np.sum(C**2)
 
 
 def circle_contains(D, p):
@@ -72,10 +71,10 @@ def get_boundary(data, v):
 
 
 def miniball_cache(data):
-    """ This miniball function is exposed so that the cache can be maintained 
-        between subsequent calls. 
-        
-        Please see the included `miniball` function to see how the interface should be used.
+    """This miniball function is exposed so that the cache can be maintained
+    between subsequent calls.
+
+    Please see the included `miniball` function to see how the interface should be used.
     """
 
     @functools.lru_cache(maxsize=1000)
@@ -97,9 +96,7 @@ def miniball_cache(data):
 
 
 def miniball(data):
-    """ Miniball algorithm with no caching between runs
-
-    """
+    """Miniball algorithm with no caching between runs"""
     mb = miniball_cache(data)
 
     C, r2 = mb(frozenset(list(range(data.shape[0]))), frozenset([]))

@@ -50,10 +50,13 @@ keywords = [
   'Rips',
 ]
 
+
 [project.optional-dependencies]
 testing = ['kmapper', 'mock', 'networkx', 'pytest', 'pytest-cov']
 
 docs = ['sktda_docs_config']
+
+ruff = ['ruff<0.11.0']
 
 [project.urls]
 Homepage = "https://cechmate.scikit-tda.org"
@@ -61,3 +64,6 @@ Documentation = "https://cechmate.scikit-tda.org"
 Repository = "https://github.com/scikit-tda/cechmate"
 Issues = "https://github.com/scikit-tda/cechmate/issues"
 Changelog = "https://github.com/scikit-tda/cechmate/blob/master/RELEASE.txt"
+
+[tool.ruff]
+exclude = ["docs"]

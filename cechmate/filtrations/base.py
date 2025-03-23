@@ -1,17 +1,14 @@
-"""All filtrations should have a base interface.
-
-"""
+"""All filtrations should have a base interface."""
 
 from ..solver import phat_diagrams
 
 
 class BaseFiltration:
-    """Base filtration that implements constructor and `diagrams` method.
-    """
+    """Base filtration that implements constructor and `diagrams` method."""
 
     def __init__(self, maxdim=None, verbose=True):
         """Default constructor
-        
+
         Parameters
         ----------
 
@@ -33,7 +30,7 @@ class BaseFiltration:
 
         Parameters
         -----------
-        simplices: 
+        simplices:
             simplices or filtration built from :code:`build` method.
 
         show_inf: Boolean
@@ -41,8 +38,8 @@ class BaseFiltration:
 
         Returns
         ---------
-        dgms: list of diagrams 
-            the persistence diagram for Hk 
+        dgms: list of diagrams
+            the persistence diagram for Hk
 
         """
         simplices = simplices or self.simplices_

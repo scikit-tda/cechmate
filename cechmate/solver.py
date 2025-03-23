@@ -21,8 +21,8 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
 
     Returns
     --------
-    dgms: list of diagrams 
-        the persistence diagram for Hk 
+    dgms: list of diagrams
+        the persistence diagram for Hk
     """
 
     ## Convert simplices representation to sparse pivot column
@@ -61,9 +61,7 @@ def phat_diagrams(simplices, show_inf=False, verbose=True):
 
 
 def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
-    """
-
-    """
+    """ """
 
     idx = 0
     columns = []
@@ -86,7 +84,7 @@ def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
             for fidxs in itertools.combinations(range(k), k - 1):
                 fidxs = np.array(list(fidxs))
                 fidxs = tuple(idxs[fidxs])
-                if not fidxs in idxs2order:
+                if fidxs not in idxs2order:
                     raise Exception(
                         "Error: Not a proper filtration: %s added before %s"
                         % (idxs, fidxs)
@@ -108,8 +106,7 @@ def _simplices_to_sparse_pivot_column(ordered_simplices, verbose=False):
 
 
 def _process_distances(pairs, ordered_simplices):
-    """ Setup persistence diagrams by reading off distances
-    """
+    """Setup persistence diagrams by reading off distances"""
 
     dgms = {}
     posneg = np.zeros(len(ordered_simplices))
@@ -145,7 +142,7 @@ def _add_unpaired(dgms, pairs, simplices):
         if posneg[i] == 0:
             (idxs, dist) = simplices[i]
             p = len(idxs) - 1
-            if not p in dgms:
+            if p not in dgms:
                 dgms[p] = []
             dgms[p].append([dist, np.inf])
 

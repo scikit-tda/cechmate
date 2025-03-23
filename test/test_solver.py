@@ -4,7 +4,6 @@ from cechmate import phat_diagrams
 
 
 def test_1d_solver():
-
     filt = [
         ([0], 0.0),
         ([1], 0.0),

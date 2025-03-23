@@ -26,13 +26,13 @@ class Extended(BaseFiltration):
     """
 
     def __init__(self, simplices, f):
-        """Initialize Extended persistence class. 
+        """Initialize Extended persistence class.
 
         Parameters
         ============
 
         simplices: List[List]
-            Simplices 
+            Simplices
 
         f: dictionary mapping name of vertex to value.
         """
@@ -49,7 +49,7 @@ class Extended(BaseFiltration):
     @classmethod
     def from_kmapper(cls, graph, f):
         """Construct :code:`Extended` object from a Kepler Mapper graph output
-        
+
         Parameters
         ===========
 
@@ -76,7 +76,7 @@ class Extended(BaseFiltration):
     @classmethod
     def from_nx(cls, graph, f):
         """Construct :code:`Extended` object from an nx.Graph object.
-        
+
         Parameters
         ===========
 
@@ -86,9 +86,9 @@ class Extended(BaseFiltration):
             Dictionary mapping node to value or string corresponding to node attribute that should be used for mapping.
         """
 
-        assert isinstance(f, dict) or isinstance(
-            f, str
-        ), "f must be of type dict or str. It is type {}".format(type(f))
+        assert isinstance(f, dict) or isinstance(f, str), (
+            "f must be of type dict or str. It is type {}".format(type(f))
+        )
 
         try:
             import networkx as nx  # internal import so that network isn't always required
@@ -109,7 +109,7 @@ class Extended(BaseFiltration):
         return Extended(simplices, f)
 
     def diagrams(self):
-        """ Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices` and function :code:`f`.
+        """Compute diagrams of extended persistent homology for a simplicial complex :code:`simplices` and function :code:`f`.
 
         Returns
         =========
@@ -131,9 +131,7 @@ class Extended(BaseFiltration):
         return self.diagrams_
 
     def _process_pairs(self, pairs):
-        """Split the persistence pairs out into their respective quadrants, adding them to their associated diagrams.
-
-        """
+        """Split the persistence pairs out into their respective quadrants, adding them to their associated diagrams."""
         n = len(self._boundary_matrix) / 2
         ordinary_pairs = [(b, d) for (b, d) in pairs if b < n and d < n]
         extended_pairs = [(b, d) for (b, d) in pairs if b < n and d >= n]
@@ -167,8 +165,7 @@ class Extended(BaseFiltration):
         return diagrams
 
     def _extract_diagram(self, diagrams, pairs, pairs_str, order_f):
-        """Operate on diagrams in place. Add pairs to diagram according to the order_f and self._mapping values.
-        """
+        """Operate on diagrams in place. Add pairs to diagram according to the order_f and self._mapping values."""
         for b, d in pairs:
             order = order_f(b, d)
             diagrams.setdefault(order, {}).setdefault(pairs_str, []).append(
@@ -177,15 +174,15 @@ class Extended(BaseFiltration):
 
     def _up_down_boundary_matrix(self, X, f):
         """
-            Let A be the boundary matrix for the ascending pass, storing the simplices in blocks that correspond to the lower stars of v1 to vn, in this order.
+        Let A be the boundary matrix for the ascending pass, storing the simplices in blocks that correspond to the lower stars of v1 to vn, in this order.
 
-            All simplices in the same block are assigned the same value, namely the height of the vertex defining the lower star.
+        All simplices in the same block are assigned the same value, namely the height of the vertex defining the lower star.
 
-            Returns
-            ========
+        Returns
+        ========
 
-            boundary matrix: sparse pivot column boundary matrix
-            f: mapping of simplices to function values
+        boundary matrix: sparse pivot column boundary matrix
+        f: mapping of simplices to function values
         """
 
         vs = [x[0] for x in X if len(x) == 1]
@@ -205,7 +202,7 @@ class Extended(BaseFiltration):
         # Augment D by lowering it it by m and coning.
         M = list(A)
 
-        kap_sims = [l[0] for l in kappas]
+        kap_sims = [kappa[0] for kappa in kappas]
         for (k, ds), lam in zip(D, lambdas):
             # find index of lam in A (or kappas)
             idx = kap_sims.index(lam[0])
@@ -230,8 +227,7 @@ class Extended(BaseFiltration):
 
 
 def _star(X, v):
-    """Compute star of v
-    """
+    """Compute star of v"""
     st = [x for x in X if v in x]
     return st
 
