@@ -1,4 +1,5 @@
 import itertools
+import warnings
 import numpy as np
 
 from .base import BaseFiltration
@@ -19,6 +20,41 @@ class Rips(BaseFiltration):
     """
 
     def build(self, X):
+        """Compute the rips filtration of a Euclidean point set.
+
+        Parameters
+        ===========
+        X: An Nxd array
+            An Nxd array of N Euclidean vectors in d dimensions.
+        """
+        warnings.warn(
+            "This function is deprecated and will be removed in a future release. Use fit instead.",
+            DeprecationWarning,
+        )
+        D = self._getSSM(X)
+        N = D.shape[0]
+        xr = np.arange(N)
+        xrl = xr.tolist()
+        maxdim = self.maxdim
+        if not maxdim:
+            maxdim = 1
+        # First add all 0 simplices
+        simplices = [([i], 0) for i in range(N)]
+        for k in range(maxdim + 1):
+            # Add all (k+1)-simplices, which have (k+2) vertices
+            for idxs in itertools.combinations(xrl, k + 2):
+                idxs = list(idxs)
+                d = 0.0
+                for i in range(len(idxs)):
+                    for j in range(i + 1, len(idxs)):
+                        d = max(d, D[idxs[i], idxs[j]])
+                simplices.append((idxs, d))
+
+        self.simplices_ = simplices
+
+        return simplices
+
+    def fit(self, X):
         """Compute the rips filtration of a Euclidean point set.
 
         Parameters

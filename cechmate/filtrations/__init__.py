@@ -1,5 +1,7 @@
-from .alpha import Alpha as Alpha
-from .rips import Rips as Rips
-from .cech import Cech as Cech
-from .extended import Extended as Extended
+from .alpha import Alpha
+from .cech import Cech
+from .rips import Rips
+# from .extended import *
 # from .miniball import get_boundary
+
+__all__ = ["Alpha", "Cech", "Rips"]

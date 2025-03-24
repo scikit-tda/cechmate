@@ -1,4 +1,6 @@
-from .base import BaseFiltration
+import warnings
+
+from cechmate.filtrations.base import BaseFiltration
 
 __all__ = ["Custom"]
 
@@ -17,5 +19,9 @@ class Custom(BaseFiltration):
             List of simplices as pairs of
 
         """
+        warnings.warn(
+            "This method is deprecated and will be removed in future versions. Use the `fit` method instead.",
+            DeprecationWarning,
+        )
 
         self.simplices_ = simplices

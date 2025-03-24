@@ -51,6 +51,8 @@ keywords = [
 
 
 [project.optional-dependencies]
+gudhi = ["gudhi"]
+
 testing = ['kmapper', 'mock', 'networkx', 'pytest', 'pytest-cov']
 
 docs = ['sktda_docs_config', "jupyter", "persim", "tadasets"]

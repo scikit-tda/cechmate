@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- (#33) Add gudhi backend.
+
 ### Fixed
 
 - (#30) Update `.readthedocs.yaml` and `docs/conf.py` to current RTDs requirements.

@@ -10,6 +10,8 @@ project = "Cechmate"
 copyright = "2019, Chris Tralie and Nathaniel Saul"
 author = "Chris Tralie and Nathaniel Saul"
 
+language = "en"
+
 version = __version__
 release = __version__
 

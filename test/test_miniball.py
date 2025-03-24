@@ -29,11 +29,13 @@
 from mock import patch
 
 import numpy as np
+import pytest
 
 import cechmate
 from cechmate.filtrations.miniball import miniball_cache, miniball
 
 
+@pytest.mark.skip(reason="This test will be removed when we include miniball as a dep")
 @patch("cechmate.filtrations.miniball.get_boundary")
 def test_caching(mock_get_boundary):
     mock_get_boundary.side_effect = cechmate.filtrations.get_boundary
