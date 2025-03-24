@@ -1,6 +1,7 @@
 """All filtrations should have a base interface."""
 
 from typing import Literal
+import warnings
 from numpy.typing import NDArray
 import numpy as np
 
@@ -55,6 +56,9 @@ class BaseFiltration:
             the persistence diagram for Hk
 
         """
+        warnings.warn(
+            "This function is deprecated and will be removed in a future release. Use transform instead."
+        )
         simplices = simplices or self.simplices_
         # TODO: Update this call.
         self.diagrams_ = phat_diagrams(simplices, show_inf)

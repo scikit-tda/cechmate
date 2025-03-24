@@ -1,4 +1,5 @@
 import itertools
+import warnings
 import numpy as np
 
 from .base import BaseFiltration
@@ -17,6 +18,18 @@ class Rips(BaseFiltration):
         >>> diagrams = r.diagrams(simplices)
 
     """
+
+    def build(self, X):
+        """Compute the rips filtration of a Euclidean point set.
+
+        Parameters
+        ===========
+        X: An Nxd array
+            An Nxd array of N Euclidean vectors in d dimensions.
+        """
+        warnings.warn(
+            "This function is deprecated and will be removed in a future release. Use fit instead."
+        )
 
     def fit(self, X):
         """Compute the rips filtration of a Euclidean point set.

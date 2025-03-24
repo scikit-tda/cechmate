@@ -1,5 +1,4 @@
 import numpy as np
-# import phat
 
 from .base import BaseFiltration
 
@@ -10,10 +9,16 @@ __all__ = ["Extended"]
 
 class Extended(BaseFiltration):
     """
-    This class computed the extended persistence of a simplicial complex. It requires input as a simplicial complex and a mapping on each vertex in the complex. It returns a dictionary storing the associated diagrams in each homology class.
+    Extended persistence class.
+
+    This class computes the extended persistence of a simplicial complex. It
+    requires a simplicial complex as input and a mapping on each vertex in the
+    complex. It returns a dictionary storing the associated diagrams in each
+    homology class.
 
     The basic steps are to:
-        - convert an abstract simplicial complex to the correct boundary matrix, using the lower-star up pass and upper-star down pass
+        - convert an abstract simplicial complex to the correct boundary
+          matrix, using the lower-star up pass and upper-star down pass
         - read the reduced boundary matrix into birth-death pairs.
         - partition pairs into respective Ordinary/Extended/Relative diagrams.
 
@@ -131,7 +136,8 @@ class Extended(BaseFiltration):
         return self.diagrams_
 
     def _process_pairs(self, pairs):
-        """Split the persistence pairs out into their respective quadrants, adding them to their associated diagrams."""
+        """Split the persistence pairs out into their respective quadrants,
+        adding them to their associated diagrams."""
         n = len(self._boundary_matrix) / 2
         ordinary_pairs = [(b, d) for (b, d) in pairs if b < n and d < n]
         extended_pairs = [(b, d) for (b, d) in pairs if b < n and d >= n]

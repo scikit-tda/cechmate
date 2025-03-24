@@ -36,6 +36,20 @@ class Alpha(BaseFiltration):
 
     MIN_DET = 1e-10
 
+    def build(self, X):
+        """
+        Do the Alpha filtration of a Euclidean point set (requires scipy)
+
+        Parameters
+        ===========
+        X: Nxd array
+            Array of N Euclidean vectors in d dimensions
+        """
+        warnings.warn(
+            "This function is deprecated and will be removed in a future release. Use fit instead."
+        )
+        return self.fit(X)
+
     def fit(self, X) -> list[tuple[tuple[np.int32], np.float64]]:
         """
         Do the Alpha filtration of a Euclidean point set (requires scipy)
@@ -211,29 +225,29 @@ class Alpha(BaseFiltration):
             return (x, rSqr)
         return (np.inf, np.inf)  # SC2 (Points not in general position)
 
-    # def transform(self, simplices=None, ripser_format=True) -> list[NDArray]:
-    #     """
-    #     Compute persistent homology.
-    #     """
-    #     simplices_ = simplices or self.simplices_
-    #
-    #     simplex_tree = gudhi.SimplexTree()
-    #     for simplex, filtration_value in simplices_:
-    #         simplex_tree.insert(simplex, filtration_value)
-    #
-    #     persistence = simplex_tree.persistence()
-    #
-    #     if not ripser_format:
-    #         return persistence
-    #
-    #     # convert to ripser.py format
-    #     ripser_output = []
-    #     for dim, (birth, death) in persistence:
-    #         while len(ripser_output) <= dim:
-    #             ripser_output.append([])
-    #         if death == float("inf"):
-    #             death = -1
-    #         ripser_output[dim].append(np.array([birth, death]))
-    #     ripser_output = [np.array(dgm) for dgm in ripser_output]
-    #
-    #     return ripser_output
+    def transform(self, simplices=None, ripser_format=True) -> list[NDArray]:
+        """
+        Compute persistent homology.
+        """
+        simplices_ = simplices or self.simplices_
+
+        simplex_tree = gudhi.SimplexTree()
+        for simplex, filtration_value in simplices_:
+            simplex_tree.insert(simplex, filtration_value)
+
+        persistence = simplex_tree.persistence()
+
+        if not ripser_format:
+            return persistence
+
+        # convert to ripser.py format
+        ripser_output = []
+        for dim, (birth, death) in persistence:
+            while len(ripser_output) <= dim:
+                ripser_output.append([])
+            if death == float("inf"):
+                death = -1
+            ripser_output[dim].append(np.array([birth, death]))
+        ripser_output = [np.array(dgm) for dgm in ripser_output]
+
+        return ripser_output

@@ -1,5 +1,6 @@
 import itertools
 from typing import Sequence
+import warnings
 import numpy as np
 
 from .base import BaseFiltration
@@ -20,6 +21,26 @@ class Cech(BaseFiltration):
         >>> diagrams = r.diagrams(simplices)
 
     """
+
+    def build(self, X):
+        """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
+
+        Parameters
+        ===========
+
+        X: Nxd array
+            N Euclidean vectors in d dimensions
+
+        Returns
+        ==========
+
+        simplices:
+            Cech filtration for the data X
+        """
+        warnings.warn(
+            "This function is deprecated and will be removed in a future release. Use fit instead."
+        )
+        return self.fit(X)
 
     def fit(self, X) -> list[tuple[list[int], int]]:
         """Compute the Cech filtration of a Euclidean point set for simplices up to order :code:`self.max_dim`.
