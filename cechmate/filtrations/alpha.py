@@ -48,7 +48,93 @@ class Alpha(BaseFiltration):
         warnings.warn(
             "This function is deprecated and will be removed in a future release. Use fit instead."
         )
-        return self.fit(X)
+        if X.shape[0] < X.shape[1]:
+            warnings.warn(
+                "The input point cloud has more columns than rows; "
+                + "did you mean to transpose?"
+            )
+        maxdim = self.maxdim
+        if not self.maxdim:
+            maxdim = X.shape[1] - 1
+
+        ## Step 1: Figure out the filtration
+        if self.verbose:
+            print("Doing spatial.Delaunay triangulation...")
+            tic = time.time()
+
+        delaunay_faces = spatial.Delaunay(X).simplices
+
+        if self.verbose:
+            print(
+                "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
+                % (time.time() - tic)
+            )
+            logger.info(
+                "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
+                % (time.time() - tic)
+            )
+            print("Building alpha filtration...")
+            tic = time.time()
+
+        filtration = {}
+        for dim in range(maxdim + 2, 1, -1):
+            for s in range(delaunay_faces.shape[0]):
+                simplex = delaunay_faces[s, :]
+                for sigma in itertools.combinations(simplex, dim):
+                    sigma = tuple(sorted(sigma))
+                    if not sigma in filtration:
+                        rSqr = self._get_circumcenter(X[sigma, :])[1]
+                        if np.isfinite(rSqr):
+                            filtration[sigma] = rSqr
+                    if sigma in filtration:
+                        for i in range(dim):  # Propagate alpha filtration value
+                            tau = sigma[0:i] + sigma[i + 1 : :]
+                            if tau in filtration:
+                                filtration[tau] = min(
+                                    filtration[tau], filtration[sigma]
+                                )
+                            elif len(tau) > 1 and sigma in filtration:
+                                # If Tau is not empty
+                                xtau, rtauSqr = self._get_circumcenter(X[tau, :])
+                                if np.sum((X[sigma[i], :] - xtau) ** 2) < rtauSqr:
+                                    filtration[tau] = filtration[sigma]
+        # Convert from squared radii to radii
+        for sigma in filtration:
+            filtration[sigma] = np.sqrt(filtration[sigma])
+
+        ## Step 2: Take care of numerical artifacts that may result
+        ## in simplices with greater filtration values than their co-faces
+        simplices_bydim = [set([]) for i in range(maxdim + 2)]
+        for simplex in filtration.keys():
+            simplices_bydim[len(simplex) - 1].add(simplex)
+        simplices_bydim = simplices_bydim[2::]
+        simplices_bydim.reverse()
+        for simplices_dim in simplices_bydim:
+            for sigma in simplices_dim:
+                for i in range(len(sigma)):
+                    tau = sigma[0:i] + sigma[i + 1 : :]
+                    if filtration[tau] > filtration[sigma]:
+                        filtration[tau] = filtration[sigma]
+
+        if self.verbose:
+            print(
+                "Finished building alpha filtration (Elapsed Time %.3g)"
+                % (time.time() - tic)
+            )
+
+        logger.info(
+            "Finished building alpha filtration (Elapsed Time %.3g)"
+            % (time.time() - tic)
+        )
+
+        # NOTE: The following line makes this method have special return type. The 0-simplices
+        # are indexed on lists, whereas all other simplices are indexed on tuples.
+        simplices = [([i], 0) for i in range(X.shape[0])]
+        simplices.extend(filtration.items())
+
+        self.simplices_ = simplices
+
+        return simplices
 
     def fit(self, X) -> list[tuple[tuple[np.int32], np.float64]]:
         """
@@ -80,6 +166,10 @@ class Alpha(BaseFiltration):
                 "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
                 % (time.time() - tic)
             )
+            logger.info(
+                "Finished spatial.Delaunay triangulation (Elapsed Time %.3g)"
+                % (time.time() - tic)
+            )
             print("Building alpha filtration...")
             tic = time.time()
 
@@ -88,13 +178,15 @@ class Alpha(BaseFiltration):
         filtration = defaultdict(lambda: float("inf"))
         circumcenter_cache = {}
 
+        filtration = {(i,): np.float64(0.0) for i in range(X.shape[0])}
+
         for dim in range(maxdim + 2, 1, -1):
             for s in range(delaunay_faces.shape[0]):
                 simplex = delaunay_faces[s, :]
                 for sigma in itertools.combinations(simplex, dim):
                     sigma = tuple(sorted(sigma))
 
-                    if filtration[sigma] == float("inf"):
+                    if sigma not in filtration:
                         if sigma not in circumcenter_cache:
                             circumcenter_cache[sigma] = self._get_circumcenter(
                                 X[sigma, :]
@@ -106,7 +198,7 @@ class Alpha(BaseFiltration):
                     if sigma in filtration:
                         for i in range(dim):  # Propagate alpha filtration value
                             tau = sigma[0:i] + sigma[i + 1 : :]
-                            if filtration[tau] == float("inf"):
+                            if tau not in filtration:
                                 if len(tau) > 1:
                                     if tau not in circumcenter_cache:
                                         circumcenter_cache[tau] = (
@@ -136,7 +228,7 @@ class Alpha(BaseFiltration):
         for simplices_dim in simplices_bydim:
             for sigma in simplices_dim:
                 for i in range(len(sigma)):
-                    tau = sigma[0:i] + sigma[i + 1 :]
+                    tau = sigma[0:i] + sigma[i + 1 : :]
                     if filtration[tau] > filtration[sigma]:
                         filtration[tau] = filtration[sigma]
 
@@ -145,6 +237,10 @@ class Alpha(BaseFiltration):
                 "Finished building alpha filtration (Elapsed Time %.3g)"
                 % (time.time() - tic)
             )
+        logger.info(
+            "Finished building alpha filtration (Elapsed Time %.3g)"
+            % (time.time() - tic)
+        )
 
         simplices = list(filtration.items())
 
