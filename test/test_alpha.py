@@ -687,7 +687,30 @@ def test_precision():
     )
     X = np.reshape(X, (int(X.size / 3), 3))
     alpha = Alpha()
-    alpha_filtration = alpha.fit(X)
-    dgms = alpha.transform(alpha_filtration)
+    alpha_filtration_build = alpha.build(X)
+    dgms = alpha.transform(alpha_filtration_build)
     assert len(dgms) == 3
-    assert len([s for s in alpha_filtration if len(s[0]) == 1]) == X.shape[0]
+    assert len([s for s in alpha_filtration_build if len(s[0]) == 1]) == X.shape[0]
+
+
+def test_backwards_compatibility(triangle):
+    """Test new fit function aligns with old build function."""
+    old = Alpha(maxdim=2).build(triangle)
+    new = Alpha(maxdim=2).fit(triangle)
+    assert len(old) == len(new)
+
+    old_vertices = [s for s in old if len(s[0]) == 1]
+    new_vertices = [s for s in new if len(s[0]) == 1]
+    for sigma, filt in old_vertices:
+        assert filt == 0
+        assert (tuple(sigma), np.float64(filt)) in new_vertices
+    old_edges = [s for s in old if len(s[0]) == 2]
+    new_edges = [s for s in new if len(s[0]) == 2]
+    assert old_edges == new_edges
+    old_triangles = [s for s in old if len(s[0]) == 3]
+    new_triangles = [s for s in new if len(s[0]) == 3]
+    assert old_triangles == new_triangles
+
+    assert len(old_vertices) == 3
+    assert len(old_edges) == 3
+    assert len(old_triangles) == 1

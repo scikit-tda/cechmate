@@ -38,3 +38,24 @@ def test_triangle(equilateral_triangle):
     assert len(c_diagrams) == 2
     assert len(c_diagrams[0]) == 3
     assert len(c_diagrams[1]) == 1
+
+
+def test_backwards_compatibility(equilateral_triangle):
+    """Test new fit function aligns with old build function."""
+    old = Cech(maxdim=2).build(equilateral_triangle)
+    new = Cech(maxdim=2).fit(equilateral_triangle)
+    assert len(old) == len(new)
+
+    old_vertices = [s for s in old if len(s[0]) == 1]
+    new_vertices = [s for s in new if len(s[0]) == 1]
+    assert old_vertices == new_vertices
+    old_edges = [s for s in old if len(s[0]) == 2]
+    new_edges = [s for s in new if len(s[0]) == 2]
+    assert old_edges == new_edges
+    old_triangles = [s for s in old if len(s[0]) == 3]
+    new_triangles = [s for s in new if len(s[0]) == 3]
+    assert old_triangles == new_triangles
+
+    assert len(old_vertices) == 3
+    assert len(old_edges) == 3
+    assert len(old_triangles) == 1

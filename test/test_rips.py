@@ -65,3 +65,22 @@ def test_triangle(equilateral_triangle):
     r_diagrams = r.transform(r_simplices)
     assert len(r_diagrams) == 1
     assert len(r_diagrams[0]) == 3
+
+
+def test_backwards_compatibility(equilateral_triangle):
+    """Ensure old API agrees with new API."""
+    r = Rips(maxdim=2)
+    r_new = r.fit(equilateral_triangle)
+    r_old = r.build(equilateral_triangle)
+
+    assert len(r_new) == len(r_old)
+
+    old_vertices = [s for s in r_old if len(s[0]) == 1]
+    new_vertices = [s for s in r_new if len(s[0]) == 1]
+    assert old_vertices == new_vertices
+    old_edges = [s for s in r_old if len(s[0]) == 2]
+    new_edges = [s for s in r_new if len(s[0]) == 2]
+    assert old_edges == new_edges
+    old_triangles = [s for s in r_old if len(s[0]) == 3]
+    new_triangles = [s for s in r_new if len(s[0]) == 3]
+    assert old_triangles == new_triangles
