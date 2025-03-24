@@ -28,7 +28,8 @@ class Rips(BaseFiltration):
             An Nxd array of N Euclidean vectors in d dimensions.
         """
         warnings.warn(
-            "This function is deprecated and will be removed in a future release. Use fit instead."
+            "This function is deprecated and will be removed in a future release. Use fit instead.",
+            DeprecationWarning,
         )
         D = self._getSSM(X)
         N = D.shape[0]

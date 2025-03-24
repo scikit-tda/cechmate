@@ -57,7 +57,8 @@ class BaseFiltration:
 
         """
         warnings.warn(
-            "This function is deprecated and will be removed in a future release. Use transform instead."
+            "This function is deprecated and will be removed in a future release. Use transform instead.",
+            DeprecationWarning,
         )
         simplices = simplices or self.simplices_
         # TODO: Update this call.

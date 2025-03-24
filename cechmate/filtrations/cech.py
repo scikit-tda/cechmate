@@ -37,7 +37,8 @@ class Cech(BaseFiltration):
             Cech filtration for the data X
         """
         warnings.warn(
-            "This function is deprecated and will be removed in a future release. Use fit instead."
+            "This function is deprecated and will be removed in a future release. Use fit instead.",
+            DeprecationWarning,
         )
         N = X.shape[0]
         xr = np.arange(N)

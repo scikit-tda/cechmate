@@ -46,7 +46,8 @@ class Alpha(BaseFiltration):
             Array of N Euclidean vectors in d dimensions
         """
         warnings.warn(
-            "This function is deprecated and will be removed in a future release. Use fit instead."
+            "This function is deprecated and will be removed in a future release. Use fit instead.",
+            DeprecationWarning,
         )
         if X.shape[0] < X.shape[1]:
             warnings.warn(
