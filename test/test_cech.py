@@ -4,7 +4,6 @@ import numpy as np
 from cechmate.filtrations import Cech
 
 
-
 @pytest.fixture
 def equilateral_triangle():
     """Define an equilateral triangle to see importance of Cech."""

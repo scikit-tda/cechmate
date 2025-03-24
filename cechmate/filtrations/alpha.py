@@ -82,7 +82,7 @@ class Alpha(BaseFiltration):
                 simplex = delaunay_faces[s, :]
                 for sigma in itertools.combinations(simplex, dim):
                     sigma = tuple(sorted(sigma))
-                    if not sigma in filtration:
+                    if sigma not in filtration:
                         rSqr = self._get_circumcenter(X[sigma, :])[1]
                         if np.isfinite(rSqr):
                             filtration[sigma] = rSqr
